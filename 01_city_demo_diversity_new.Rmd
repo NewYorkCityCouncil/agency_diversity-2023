@@ -1,0 +1,354 @@
+---
+title: "01_city_demo_diversity_metric_new"
+output: html_document
+---
+
+```{r setup}
+# R version
+
+# using PUMS 2016-2020 5 Year Labor Force demographics
+# https://www.bls.gov/cps/lfcharacteristics.htm#laborforce
+# The labor force is the sum of employed and unemployed persons. The labor force participation rate is the labor force as a percent of the civilian noninstitutional population. 
+# https://www.bls.gov/cps/cps_htgm.htm#nilf
+# https://webapps.dol.gov/dolfaq/go-dol-faq.asp?faqid=111&faqsub=Labor+Force&faqtop=Statistics&topicid=6
+# 
+library(jsonlite)
+library(censusapi)
+library(data.table)
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+# source("envs.R") .
+options(scipen = 999)
+
+# read in data from mdat pums -----------
+# 2020 5-Year
+# ----- ***TO DO***: GET NEW DATA -----
+t_18 <- fromJSON(paste0('https://api.census.gov/data/2018/acs/acs5/pums?get=PWGTP,PWGTP,RAC1P,SEX,ESR,HISP&ucgid=7950000US3603701,7950000US3603702,7950000US3603703,7950000US3603704,7950000US3603705,7950000US3603706,7950000US3603707,7950000US3603708,7950000US3603709,7950000US3603710,7950000US3603801,7950000US3603802,7950000US3603803,7950000US3603804,7950000US3603805,7950000US3603806,7950000US3603807,7950000US3603808,7950000US3603809,7950000US3603810,7950000US3603901,7950000US3603902,7950000US3603903,7950000US3604001,7950000US3604002,7950000US3604003,7950000US3604004,7950000US3604005,7950000US3604006,7950000US3604007,7950000US3604008,7950000US3604009,7950000US3604010,7950000US3604011,7950000US3604012,7950000US3604013,7950000US3604014,7950000US3604015,7950000US3604016,7950000US3604017,7950000US3604018,7950000US3604101,7950000US3604102,7950000US3604103,7950000US3604104,7950000US3604105,7950000US3604106,7950000US3604107,7950000US3604108,7950000US3604109,7950000US3604110,7950000US3604111,7950000US3604112,7950000US3604113,7950000US3604114&key=', Sys.getenv("KEY")))
+```
+
+```{r}
+# ----- GETTING NEW DATA (2019) -----
+t_19 <- fromJSON(paste0('https://api.census.gov/data/2019/acs/acs5/pums?get=PWGTP,PWGTP,RAC1P,SEX,ESR,HISP&ucgid=7950000US3603701,7950000US3603702,7950000US3603703,7950000US3603704,7950000US3603705,7950000US3603706,7950000US3603707,7950000US3603708,7950000US3603709,7950000US3603710,7950000US3603801,7950000US3603802,7950000US3603803,7950000US3603804,7950000US3603805,7950000US3603806,7950000US3603807,7950000US3603808,7950000US3603809,7950000US3603810,7950000US3603901,7950000US3603902,7950000US3603903,7950000US3604001,7950000US3604002,7950000US3604003,7950000US3604004,7950000US3604005,7950000US3604006,7950000US3604007,7950000US3604008,7950000US3604009,7950000US3604010,7950000US3604011,7950000US3604012,7950000US3604013,7950000US3604014,7950000US3604015,7950000US3604016,7950000US3604017,7950000US3604018,7950000US3604101,7950000US3604102,7950000US3604103,7950000US3604104,7950000US3604105,7950000US3604106,7950000US3604107,7950000US3604108,7950000US3604109,7950000US3604110,7950000US3604111,7950000US3604112,7950000US3604113,7950000US3604114&key=', Sys.getenv("KEY")))
+```
+
+```{r}
+# ----- GETTING NEW DATA (2020) -----
+t_20 <- fromJSON(paste0('https://api.census.gov/data/2020/acs/acs5/pums?get=PWGTP,PWGTP,RAC1P,SEX,ESR,HISP&ucgid=7950000US3603701,7950000US3603702,7950000US3603703,7950000US3603704,7950000US3603705,7950000US3603706,7950000US3603707,7950000US3603708,7950000US3603709,7950000US3603710,7950000US3603801,7950000US3603802,7950000US3603803,7950000US3603804,7950000US3603805,7950000US3603806,7950000US3603807,7950000US3603808,7950000US3603809,7950000US3603810,7950000US3603901,7950000US3603902,7950000US3603903,7950000US3604001,7950000US3604002,7950000US3604003,7950000US3604004,7950000US3604005,7950000US3604006,7950000US3604007,7950000US3604008,7950000US3604009,7950000US3604010,7950000US3604011,7950000US3604012,7950000US3604013,7950000US3604014,7950000US3604015,7950000US3604016,7950000US3604017,7950000US3604018,7950000US3604101,7950000US3604102,7950000US3604103,7950000US3604104,7950000US3604105,7950000US3604106,7950000US3604107,7950000US3604108,7950000US3604109,7950000US3604110,7950000US3604111,7950000US3604112,7950000US3604113,7950000US3604114&key=', Sys.getenv("KEY")))
+```
+
+```{r}
+convert_df <- function(t) {
+  df=t
+  df[1,1:ncol(df)]
+  df<-as.data.frame(df[1:nrow(df), 1:ncol(df)])
+  names(df)<-t[1,1:ncol(t)]
+  df=df[-1,-1]
+}
+df_18 = convert_df(t_18)
+df_19 = convert_df(t_19)
+df_20 = convert_df(t_20)
+```
+
+```{r}
+# ----- ***TO DO***: RECODE DEFINITIONS FROM 00_Data_Cleaning -----
+recode_df <- function(df) {
+  new_df <- df %>% mutate(race_ethnicity = recode(RAC1P, "1" = "NH White", # WHITE ALONE
+                                                     "2" = "NH Black", # BLACK ALONE
+                                                     "3" = "NH SOR or Race UCND", # AMERICAN INDIAN ALONE
+                                                     "4" = "NH SOR or Race UCND", # AK NATIVE ALONE
+                                                     "5" = "NH SOR or Race UCND", # NATIVE, NOT SPEC/NO OTHER
+                                                     "6" = "NH Asian", # ASIAN ALONE
+                                                     "7" = "NH Asian", # NATIVE HAWAIIAN OR PACIFIC ISL
+                                                     "8" = "NH SOR or Race UCND", # SOR
+                                                     "9" = "NH SOR or Race UCND"), # TWO OR MORE
+                      RAC1P = recode(RAC1P,  "1" = "White", 
+                                     "2" = "Black",
+                                     "3" = "Other",
+                                     "4" = "Other",
+                                     "5" = "Other",
+                                     "6" = "Asian",
+                                     "7" = "Asian",
+                                     "8" = "Other",
+                                     "9" = "Other"),
+                      SEX = recode(SEX, "1" = "Male",
+                                        "2" = "Female"),
+                      HISP = case_when(HISP != "1" ~ "Hispanic or Latino", 
+                                       TRUE ~ "Non-Hispanic"),
+                      race_ethnicity = case_when(HISP == "Non-Hispanic" ~ race_ethnicity,
+                                                 TRUE ~ "Hispanic or Latino"),
+                      ESR = recode(ESR, `0` = "Less than 16", 
+                                        `6` = "Not in Labor Force",
+                                        `1` = "Employed",
+                                        `2` = "Employed",
+                                        `3` = "Unemployed",
+                                        `4` = "Armed Forces",
+                                        `5` = "Armed Forces"),
+                      labor_force = case_when(ESR == "Employed" | ESR == "Unemployed" ~ 1,
+                                              TRUE ~ 0))
+  return(new_df)
+}
+```
+
+```{r}
+df_18_1 <- recode_df(df_18)
+df_19_1 <- recode_df(df_19)
+df_20_1 <- recode_df(df_20)
+```
+
+```{r}
+# get person weight values ---------
+pw_value <- function(df) {
+  new_df <- df %>%
+    mutate(PWGTP = as.numeric(PWGTP)) %>% 
+    uncount(PWGTP, .remove = F)
+  return(new_df)
+}
+
+df_18_2 <- pw_value(df_18_1)
+df_19_2 <- pw_value(df_19_1)
+df_20_2 <- pw_value(df_20_1)
+```
+
+```{r}
+# ----- VERIFYING RECODING, IGNORE -----
+# unique(df_18_2$RAC1P) # - good
+# # unique(df_18_2$SEX) - good
+# unique(df_18_2$HISP)
+# unique(df_18_2$race_ethnicity)
+# ----- IGNORE | VERIFYING RECODE | IGNORE -----
+```
+
+```{r} 
+# ----- IGNORE: ORIGINAL CODE -----
+
+# # Recode Info -------------
+# # White alone	1
+# # Black or African American alone	2
+# # American Indian alone	3
+# # Alaska Native alone	4
+# # American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races	5
+# # Asian alone	6
+# # Native Hawaiian and Other Pacific Islander alone	7
+# # Some Other Race alone	8
+# # Two or More Races	9
+# 
+# # recode variables ---------------
+# df1  <- df %>% mutate(RAC1P = recode(RAC1P,  "1" = "White", 
+#                                              "2" = "Black",
+#                                              "3" = "Other",
+#                                              "4" = "Other",
+#                                              "5" = "Other",
+#                                              "6" = "Asian",
+#                                              "7" = "Asian",
+#                                              "8" = "Other",
+#                                              "9" = "Other"),
+#                       SEX = recode(SEX, "1" = "Male",
+#                                         "2" = "Female"),
+#                       HISP = case_when(HISP != "1" ~ "Hispanic", 
+#                                        TRUE ~ "Non-Hispanic"),
+#                       race_ethnicity = case_when(HISP == "Non-Hispanic" ~ RAC1P,
+#                                                  TRUE ~ "Hispanic"),
+#                       ESR = recode(ESR, `0` = "Less than 16", 
+#                                         `6` = "Not in Labor Force",
+#                                         `1` = "Employed",
+#                                         `2` = "Employed",
+#                                         `3` = "Unemployed",
+#                                         `4` = "Armed Forces",
+#                                         `5` = "Armed Forces"),
+#                       labor_force = case_when(ESR == "Employed" | ESR == "Unemployed" ~ 1,
+#                                               TRUE ~ 0) )
+# 
+# # get person weight values ---------
+# 
+# df2 <- df1 %>% 
+#   mutate(PWGTP = as.numeric(PWGTP)) %>% 
+#   uncount(PWGTP, .remove = F) # make each row an individual
+
+# ----- IGNORE: ORIGINAL CODE -----
+```
+
+```{r}
+write.csv(df_18_2, 'city_demo_2018_pums.csv', row.names = F)
+write.csv(df_19_2, 'city_demo_2019_pums.csv', row.names = F)
+write.csv(df_20_2, 'city_demo_2020_pums.csv', row.names = F)
+```
+
+```{r}
+# City demographics -----
+
+# aggregate & filter to labor force pop only
+
+# ----- ***TO DO***: AGGREGATE, FILTER FOR 2019 & 2020 -----
+
+#race
+filter_race <- function(df2) {
+  race <- df2 %>% 
+  filter(labor_force == 1) %>% 
+  group_by(race_ethnicity) %>% 
+  summarise(count = n()) %>%  
+  mutate(percent = count/sum(count) * 100)
+  return(race)
+}
+
+race_18 <- filter_race(df_18_2)
+race_19 <- filter_race(df_19_2)
+race_20 <- filter_race(df_20_2)
+
+# ----- ***TO DO***: AGGREGATE, FILTER FOR 2019 & 2020 -----
+
+# gender
+filter_gender <- function(df2) {
+  gender <- df2 %>% 
+  filter(labor_force == 1) %>% 
+  group_by(SEX) %>% 
+  summarise(count = n()) %>%  
+  mutate(percent = count/sum(count) * 100)
+  return(gender)
+}
+
+sex_18 <- filter_gender(df_18_2)
+sex_19 <- filter_gender(df_19_2)
+sex_20 <- filter_gender(df_20_2)
+```
+
+```{r}
+unique(race_18$race_ethnicity)
+```
+
+
+```{r}
+# City demographics -----
+
+# female: 
+city_female_18 <- sex_18 %>%  filter(SEX =="Female") %>% select(percent) %>% pull()
+city_female_19 <- sex_19 %>%  filter(SEX =="Female") %>% select(percent) %>% pull()
+city_female_20 <- sex_20 %>%  filter(SEX =="Female") %>% select(percent) %>% pull()
+
+# male: 
+city_male_18 <- sex_18 %>%  filter(SEX =="Male") %>% select(percent) %>% pull()
+city_male_19 <- sex_19 %>%  filter(SEX =="Male") %>% select(percent) %>% pull()
+city_male_20 <- sex_20 %>%  filter(SEX =="Male") %>% select(percent) %>% pull()
+
+# nh white:
+city_white_18 <- race_18 %>%  filter(race_ethnicity =="NH White") %>% select(percent) %>% pull()
+city_white_19 <- race_19 %>%  filter(race_ethnicity =="NH White") %>% select(percent) %>% pull()
+city_white_20 <- race_20 %>%  filter(race_ethnicity =="NH White") %>% select(percent) %>% pull()
+
+
+
+city_black <- race %>%  filter(race_ethnicity =="NH Black") %>% select(percent) %>% pull()
+
+city_hispanic <- race %>%  filter(race_ethnicity =="Hispanic or Latino") %>% select(percent) %>% pull()
+
+city_asian <- race %>%  filter(race_ethnicity =="NH Asian") %>% select(percent) %>% pull()
+
+city_sor <- race %>%  filter(race_ethnicity =="NH SOR or Race UCND") %>% select(percent) %>% pull()
+```
+
+```{r}
+city_female_18
+```
+
+
+```{r}
+# ***TO DO: GET NEW DATA***
+# read in 2018 agency diversity csv (from DCAS worker profile)
+
+wp <- read.csv("../data/Agency_Diversity.csv") %>% janitor::clean_names()
+```
+
+```{r}
+# ***TO DO: FILTER BY AGENCIES***
+# GENDER: DOITT
+head(wp)
+```
+
+
+```{r}
+# distance to city diversity calculations
+
+wp$d1 <- abs(wp$x_female - city_female) + abs(wp$x_male - city_male) +
+  abs(wp$x_white - city_white) + abs(wp$x_black - city_black) +
+  abs(wp$x_hispanic - city_hispanic) + abs(wp$x_asian - city_asian) +
+  abs(wp$x_sor - city_sor)
+
+wp$d2 <- abs(wp$x_female - city_female)/city_female + 
+  abs(wp$x_male - city_male)/city_male +
+  abs(wp$x_white - city_white)/city_white + 
+  abs(wp$x_black - city_black)/city_black +
+  abs(wp$x_hispanic - city_hispanic)/city_hispanic + 
+  abs(wp$x_asian - city_asian)/city_asian +
+  abs(wp$x_sor - city_sor)/city_sor
+
+wp$d4 <- abs(wp$x_female - city_female) / (wp$x_female - city_female) /2  +
+  abs(wp$x_male - city_male) / (wp$x_male - city_male) /2 + 
+  abs(wp$x_white - city_white) / (wp$x_white - city_white) /2 +
+  abs(wp$x_black - city_black)/ (wp$x_black - city_black) /2 +
+  abs(wp$x_hispanic - city_hispanic)/ (wp$x_hispanic - city_hispanic) /2 + 
+  abs(wp$x_asian - city_asian)/ (wp$x_asian - city_asian) /2 +
+  abs(wp$x_sor - city_sor)/ (wp$x_sor - city_sor) /2
+
+wp$d3 <- sqrt((wp$x_female - city_female)^2 + 
+             (wp$x_male - city_male)^2 +
+             (wp$x_white - city_white)^2 +
+             (wp$x_black - city_black)^2 +
+             (wp$x_hispanic - city_hispanic)^2 +
+             (wp$x_asian - city_asian)^2 +
+             (wp$x_sor - city_sor)^2 )
+
+wp$d5 <- abs(wp$x_female - city_female) / (wp$x_female + city_female) /2  +
+  abs(wp$x_male - city_male) / (wp$x_male + city_male) /2 + 
+  abs(wp$x_white - city_white) / (wp$x_white + city_white) /2 +
+  abs(wp$x_black - city_black)/ (wp$x_black + city_black) /2 +
+  abs(wp$x_hispanic - city_hispanic)/ (wp$x_hispanic + city_hispanic) /2 + 
+  abs(wp$x_asian - city_asian)/ (wp$x_asian + city_asian) /2 +
+  abs(wp$x_sor - city_sor)/ (wp$x_sor + city_sor) /2
+```
+
+```{r}
+print(unique(wp$d5))
+```
+
+
+```{r}
+# dat['d6']=np.sqrt((dat[columns[2]]-dat_city[0])**2+(dat[columns[5]]-dat_city[3])**2+(dat[columns[6]]-dat_city[4])**2+(dat[columns[7]]-dat_city[5])**2+(dat[columns[8]]-dat_city[6])**2)
+# dat['d6_norm']=(dat['d6']-dat['d6'].min())/(dat['d6'].max()-dat['d6'].min())*100.0
+# wp$d6 <- sqrt(wp$x_female - city_female)^2
+
+wp$d3_norm <- (wp$d3 - min(wp$d3)) / (max(wp$d3) - min(wp$d3)) * 100
+wp$d4_norm <- (wp$d4 - min(wp$d4)) / (max(wp$d4) - min(wp$d4)) * 100
+
+wp$d3_gender <- sqrt((wp$x_female - city_female)^2 + (wp$x_male - city_male)^2)
+wp$d3_race <- sqrt((wp$x_white - city_white)^2 + (wp$x_black - city_black)^2 +
+                    (wp$x_hispanic - city_hispanic)^2 +  (wp$x_asian - city_asian)^2  +
+                     (wp$x_sor - city_sor)^2)
+wp$d4_gender <- abs(wp$x_female - city_female) / (wp$x_female + city_female) / 2 +
+  abs(wp$x_male - city_male) / (wp$x_male + city_male) / 2 
+
+wp$d4_race <- abs(wp$x_white - city_white) / (wp$x_white + city_white) / 2 +
+  abs(wp$x_black - city_black) / (wp$x_black + city_black) / 2  +
+  abs(wp$x_hispanic - city_hispanic) / (wp$x_hispanic + city_hispanic) / 2 +
+  abs(wp$x_asian - city_asian) / (wp$x_asian + city_asian) / 2 +
+  abs(wp$x_sor - city_sor) / (wp$x_sor + city_sor) / 2 
+
+wp$d3_gender_norm <- 
+  (wp$d3_gender - min(wp$d3_gender)) / (max(wp$d3_gender) - min(wp$d3_gender)) *100
+ 
+
+wp$d3_race_norm <- 
+  (wp$d3_race - min(wp$d3_race)) / (max(wp$d3_race) - min(wp$d3_race)) *100
+
+
+wp$d3_norm_high <- wp$d3_norm > 70
+wp$d3_gender_norm_high <- wp$d3_gender_norm > 70
+wp$d3_race_norm_high <- wp$d3_race_norm > 70
+wp$d3_gender_race_norm_high <- wp$d3_gender_norm > 70 | wp$d3_race_norm > 70
+
+
+write.csv(wp, 'agency_diversity_calculations.csv', row.names = F)
+
+
+```
