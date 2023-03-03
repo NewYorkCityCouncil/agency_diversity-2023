@@ -238,20 +238,29 @@ city_male_20 <- get_var(sex_20, sex_20$SEX, "Male")
 city_white_18 <- get_var(race_18, race_18$race_ethnicity, "NH White") 
 city_white_19 <- get_var(race_19, race_19$race_ethnicity, "NH White") 
 city_white_20 <- get_var(race_20, race_20$race_ethnicity, "NH White") 
+
+# nh black: 
+city_black_18 <- get_var(race_18, race_18$race_ethnicity, "NH Black") 
+city_black_19 <- get_var(race_19, race_19$race_ethnicity, "NH Black") 
+city_black_20 <- get_var(race_20, race_20$race_ethnicity, "NH Black") 
+
+# hispanic or latino:
+city_hispanic_18 <- get_var(race_18, race_18$race_ethnicity, "Hispanic or Latino") 
+city_hispanic_19 <- get_var(race_19, race_19$race_ethnicity, "Hispanic or Latino") 
+city_hispanic_20 <- get_var(race_20, race_20$race_ethnicity, "Hispanic or Latino") 
+
+# asian:
+city_asian_18 <- get_var(race_18, race_18$race_ethnicity, "NH Asian") 
+city_asian_19 <- get_var(race_19, race_19$race_ethnicity, "NH Asian") 
+city_asian_20 <- get_var(race_20, race_20$race_ethnicity, "NH Asian") 
+
+# sor:
+# city_sor_18 <- get_var(race_18, race_18$race_ethnicity, "NH SOR or Race UCND") 
+# city_sor_19 <- get_var(race_19, race_19$race_ethnicity, "NH SOR or Race UCND") 
+# city_sor_20 <- get_var(race_20, race_20$race_ethnicity, "NH SOR or Race UCND")
 ```
 
 ```{r}
-
-# # nh black:
-# city_black_18 <- race_18 %>%  filter(race_ethnicity =="NH Black") %>% select(percent) %>% pull()
-# city_black <- race_18 %>%  filter(race_ethnicity =="NH Black") %>% select(percent) %>% pull()
-# 
-# # hispanic or latino:
-# city_hispanic <- race %>%  filter(race_ethnicity =="Hispanic or Latino") %>% select(percent) %>% pull()
-# 
-# 
-# city_asian <- race %>%  filter(race_ethnicity =="NH Asian") %>% select(percent) %>% pull()
-# 
 # city_sor <- race %>%  filter(race_ethnicity =="NH SOR or Race UCND") %>% select(percent) %>% pull()
 ```
 
