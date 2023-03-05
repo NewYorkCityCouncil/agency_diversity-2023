@@ -112,15 +112,6 @@ df_19_2 <- pw_value(df_19_1)
 df_20_2 <- pw_value(df_20_1)
 ```
 
-```{r}
-# ----- VERIFYING RECODING, IGNORE -----
-# unique(df_18_2$RAC1P) # - good
-# # unique(df_18_2$SEX) - good
-# unique(df_18_2$HISP)
-# unique(df_18_2$race_ethnicity)
-# ----- IGNORE | VERIFYING RECODE | IGNORE -----
-```
-
 ```{r} 
 # ----- IGNORE: ORIGINAL CODE -----
 
@@ -255,32 +246,30 @@ city_asian_19 <- get_var(race_19, race_19$race_ethnicity, "NH Asian")
 city_asian_20 <- get_var(race_20, race_20$race_ethnicity, "NH Asian") 
 
 # sor:
-# city_sor_18 <- get_var(race_18, race_18$race_ethnicity, "NH SOR or Race UCND") 
-# city_sor_19 <- get_var(race_19, race_19$race_ethnicity, "NH SOR or Race UCND") 
-# city_sor_20 <- get_var(race_20, race_20$race_ethnicity, "NH SOR or Race UCND")
-```
-
-```{r}
-# city_sor <- race %>%  filter(race_ethnicity =="NH SOR or Race UCND") %>% select(percent) %>% pull()
+city_sor_18 <- get_var(race_18, race_18$race_ethnicity, "NH SOR or Race UCND")
+city_sor_19 <- get_var(race_19, race_19$race_ethnicity, "NH SOR or Race UCND")
+city_sor_20 <- get_var(race_20, race_20$race_ethnicity, "NH SOR or Race UCND")
 ```
 
 ```{r}
 # ***TO DO: GET NEW DATA***
-# read in 2018 agency diversity csv (from DCAS worker profile)
-
-wp <- read.csv("../data/Agency_Diversity.csv") %>% janitor::clean_names()
+# read in 2018-2020 agency diversity csv (from DCAS worker profile)
+wp_18 <- read.csv("../data/Agency_Diversity_18.csv") %>% janitor::clean_names()
+wp_19 <- read.csv("../data/Agency_Diversity_19.csv") %>% janitor::clean_names()
+wp_20 <- read.csv("../data/Agency_Diversity_20.csv") %>% janitor::clean_names()
 ```
 
 ```{r}
 # ***TO DO: FILTER BY AGENCIES***
+# RH - DON'T FORGET TO DO THIS
 # GENDER: DOITT
-head(wp)
 ```
 
 ```{r}
-# distance to city diversity calculations
-
-wp$d1 <- abs(wp$x_female - city_female) + abs(wp$x_male - city_male) +
+# ***TO DO: distance to city diversity calculations for ALL 2018-2020***
+# RH - UNDERSTAND WHAT THESE CALCULATIONS DO
+run_calc <- function(wp, city_female, city_male, city_white, city_black, city_hispanic, city_asian, city_sor) {
+  wp$d1 <- abs(wp$x_female - city_female) + abs(wp$x_male - city_male) +
   abs(wp$x_white - city_white) + abs(wp$x_black - city_black) +
   abs(wp$x_hispanic - city_hispanic) + abs(wp$x_asian - city_asian) +
   abs(wp$x_sor - city_sor)
@@ -316,48 +305,53 @@ wp$d5 <- abs(wp$x_female - city_female) / (wp$x_female + city_female) /2  +
   abs(wp$x_hispanic - city_hispanic)/ (wp$x_hispanic + city_hispanic) /2 + 
   abs(wp$x_asian - city_asian)/ (wp$x_asian + city_asian) /2 +
   abs(wp$x_sor - city_sor)/ (wp$x_sor + city_sor) /2
+  return(wp)
+}
 ```
 
 ```{r}
-print(unique(wp$d5))
+# run_calc <- function(wp, city_female, city_male, city_white, city_black, city_hispanic, city_asian, city_sor)
+wp_18 <- run_calc(wp_18, city_female_18, city_male_18, city_white_18, city_black_18, city_hispanic_18, city_asian_18, city_sor_18)
+wp_19 <- run_calc(wp_19, city_female_19, city_male_19, city_white_19, city_black_19, city_hispanic_19, city_asian_19, city_sor_19)
+wp_20 <- run_calc(wp_20, city_female_20, city_male_20, city_white_20, city_black_20, city_hispanic_20, city_asian_20, city_sor_20)
 ```
 
 ```{r}
-# dat['d6']=np.sqrt((dat[columns[2]]-dat_city[0])**2+(dat[columns[5]]-dat_city[3])**2+(dat[columns[6]]-dat_city[4])**2+(dat[columns[7]]-dat_city[5])**2+(dat[columns[8]]-dat_city[6])**2)
-# dat['d6_norm']=(dat['d6']-dat['d6'].min())/(dat['d6'].max()-dat['d6'].min())*100.0
-# wp$d6 <- sqrt(wp$x_female - city_female)^2
+# RH - UNDERSTAND WHAT THESE CALCULATIONS DO
+run_calc_2 <- function(wp, city_female, city_male, city_white, city_black, city_hispanic, city_asian, city_sor) {
+  wp$d3_norm <- (wp$d3 - min(wp$d3)) / (max(wp$d3) - min(wp$d3)) * 100
+  wp$d4_norm <- (wp$d4 - min(wp$d4)) / (max(wp$d4) - min(wp$d4)) * 100
+  
+  wp$d3_gender <- sqrt((wp$x_female - city_female)^2 + (wp$x_male - city_male)^2)
+  wp$d3_race <- sqrt((wp$x_white - city_white)^2 + (wp$x_black - city_black)^2 +
+                       (wp$x_hispanic - city_hispanic)^2 +  (wp$x_asian - city_asian)^2  +
+                       (wp$x_sor - city_sor)^2)
+  wp$d4_gender <- abs(wp$x_female - city_female) / (wp$x_female + city_female) / 2 +
+    abs(wp$x_male - city_male) / (wp$x_male + city_male) / 2 
+  
+  wp$d4_race <- abs(wp$x_white - city_white) / (wp$x_white + city_white) / 2 +
+    abs(wp$x_black - city_black) / (wp$x_black + city_black) / 2  +
+    abs(wp$x_hispanic - city_hispanic) / (wp$x_hispanic + city_hispanic) / 2 +
+    abs(wp$x_asian - city_asian) / (wp$x_asian + city_asian) / 2 +
+    abs(wp$x_sor - city_sor) / (wp$x_sor + city_sor) / 2 
+  
+  wp$d3_gender_norm <- 
+    (wp$d3_gender - min(wp$d3_gender)) / (max(wp$d3_gender) - min(wp$d3_gender)) *100
+  
+  wp$d3_race_norm <- 
+    (wp$d3_race - min(wp$d3_race)) / (max(wp$d3_race) - min(wp$d3_race)) *100
+  
+  wp$d3_norm_high <- wp$d3_norm > 70
+  wp$d3_gender_norm_high <- wp$d3_gender_norm > 70
+  wp$d3_race_norm_high <- wp$d3_race_norm > 70
+  wp$d3_gender_race_norm_high <- wp$d3_gender_norm > 70 | wp$d3_race_norm > 70
+  
+  return(wp)
+}
 
-wp$d3_norm <- (wp$d3 - min(wp$d3)) / (max(wp$d3) - min(wp$d3)) * 100
-wp$d4_norm <- (wp$d4 - min(wp$d4)) / (max(wp$d4) - min(wp$d4)) * 100
+write.csv(run_calc_2(wp_18, city_female_18, city_male_18, city_white_18, city_black_18, city_hispanic_18, city_asian_18, city_sor_18), '../data/agency_diversity_calculations_18.csv', row.names = F)
 
-wp$d3_gender <- sqrt((wp$x_female - city_female)^2 + (wp$x_male - city_male)^2)
-wp$d3_race <- sqrt((wp$x_white - city_white)^2 + (wp$x_black - city_black)^2 +
-                    (wp$x_hispanic - city_hispanic)^2 +  (wp$x_asian - city_asian)^2  +
-                     (wp$x_sor - city_sor)^2)
-wp$d4_gender <- abs(wp$x_female - city_female) / (wp$x_female + city_female) / 2 +
-  abs(wp$x_male - city_male) / (wp$x_male + city_male) / 2 
+write.csv(run_calc_2(wp_19, city_female_19, city_male_19, city_white_19, city_black_19, city_hispanic_19, city_asian_19, city_sor_19), '../data/agency_diversity_calculations_19.csv', row.names = F)
 
-wp$d4_race <- abs(wp$x_white - city_white) / (wp$x_white + city_white) / 2 +
-  abs(wp$x_black - city_black) / (wp$x_black + city_black) / 2  +
-  abs(wp$x_hispanic - city_hispanic) / (wp$x_hispanic + city_hispanic) / 2 +
-  abs(wp$x_asian - city_asian) / (wp$x_asian + city_asian) / 2 +
-  abs(wp$x_sor - city_sor) / (wp$x_sor + city_sor) / 2 
-
-wp$d3_gender_norm <- 
-  (wp$d3_gender - min(wp$d3_gender)) / (max(wp$d3_gender) - min(wp$d3_gender)) *100
- 
-
-wp$d3_race_norm <- 
-  (wp$d3_race - min(wp$d3_race)) / (max(wp$d3_race) - min(wp$d3_race)) *100
-
-
-wp$d3_norm_high <- wp$d3_norm > 70
-wp$d3_gender_norm_high <- wp$d3_gender_norm > 70
-wp$d3_race_norm_high <- wp$d3_race_norm > 70
-wp$d3_gender_race_norm_high <- wp$d3_gender_norm > 70 | wp$d3_race_norm > 70
-
-
-write.csv(wp, 'agency_diversity_calculations.csv', row.names = F)
-
-
+write.csv(run_calc_2(wp_20, city_female_20, city_male_20, city_white_20, city_black_20, city_hispanic_20, city_asian_20, city_sor_20), '../data/agency_diversity_calculations_20.csv', row.names = F)
 ```
