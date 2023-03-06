@@ -1,0 +1,264 @@
+---
+title: "02_agency_demo_improv_new"
+output: html_document
+date: "2023-03-06"
+---
+
+```{r setup, include=FALSE}
+# load libraries ----
+library(RSocrata)
+library(skimr)
+library(dplyr)
+library(tidyr)
+library(hrbrthemes)
+library(plotly)
+library(ggplot2)
+
+# read dataset ----
+r <- read.socrata("https://data.cityofnewyork.us/resource/423i-ukqr.json?$limit=9999999999", stringsAsFactors = F)
+```
+
+```{r}
+# ***TO DO: GET NEW DATA***
+r_2018 <- filter(r, data_year == "2018")
+r_2019 <- filter(r, data_year == "2019")
+r_2020 <- filter(r, data_year == "2020")
+```
+
+```{r}
+# cleaning data -----------
+clean <- function(r) {
+  r$number_of_employees_middle <- as.numeric(gsub("<5", "2.5", r$number_of_employees))
+  r$number_of_employees_top <- as.numeric(gsub("<5", "4", r$number_of_employees))
+  r$number_of_employees_bottom <- as.numeric(gsub("<5", "1", r$number_of_employees))
+  r$agency_name <- gsub("'", "", r$agency_name)
+  r$gender <- gsub("Unknown or Choose Not to Disclose", "Unknown", r$gender)
+  
+  # shorten the names, to acroynms of agencies for diagnostic plots ----
+  r1 <- r %>%  mutate_at(vars(c(1:3,7:10)), as.factor)
+  
+  r1$agency <- r1$agency_name
+  
+  r1$agency_name <- recode(r1$agency, 
+                           `ADMINISTRATION FOR CHILDRENS SERVICES` = "ACS", 
+                           `BUSINESS INTEGRITY COMMISSION` = "BIC", 
+                           `DEPARTMENT FOR THE AGING` = "DFTA", 
+                           `DEPARTMENT OF BUILDINGS` = "DOB", 
+                           `DEPARTMENT OF CITY PLANNING` = "DCP", 
+                           `DEPARTMENT OF CITYWIDE ADMINISTRATIVE SERVICES` = "DCAS", 
+                           `DEPARTMENT OF CONSUMER AFFAIRS` = "DCA", 
+                           `DEPARTMENT OF CORRECTION` = "DOC", 
+                           `DEPARTMENT OF CULTURAL AFFAIRS` = "DCLA", 
+                           `DEPARTMENT OF DESIGN AND CONSTRUCTION` = "DDC", 
+                           `DEPARTMENT OF EDUCATION (NON-PEDAGOGICAL)` = "DOE*", 
+                           `DEPARTMENT OF ENVIRONMENTAL PROTECTION` = "DEP", 
+                           `DEPARTMENT OF FINANCE` = "DOF", 
+                           `DEPARTMENT OF HEALTH AND MENTAL HYGIENE` = "DOHMH", 
+                           `DEPARTMENT OF HOMELESS SERVICES` = "DHS", 
+                           `DEPARTMENT OF INFORMATION TECHNOLOGY AND TELECOMMUNICATIONS` = "DOITT",
+                           `DEPARTMENT OF INVESTIGATION` = "DOI", 
+                           `DEPARTMENT OF PARKS AND RECREATION` = "PARKS", 
+                           `DEPARTMENT OF PROBATION` = "DOP", 
+                           `DEPARTMENT OF RECORDS AND INFORMATION SERVICES` = "DORIS", 
+                           `DEPARTMENT OF SANITATION` = "DSNY", 
+                           `DEPARTMENT OF SMALL BUSINESS SERVICES` = "SBS", 
+                           `DEPARTMENT OF TRANSPORTATION` = "DOT", 
+                           `DEPARTMENT OF VETERANS SERVICES` = "DVS", 
+                           `DEPARTMENT OF YOUTH AND COMMUNITY DEVELOPMENT` = "DYCD", 
+                           `FIRE DEPARTMENT` = "FDNY", 
+                           `HOUSING PRESERVATION AND DEVELOPMENT` = "HPD", 
+                           `HUMAN RESOURCES ADMINISTRATION/DEPARTMENT OF SOCIAL SERVICES` = "HRA/DSS", 
+                           `LAW DEPARTMENT` = "LAW", 
+                           `MAYORS OFFICE OF CONTRACT SERVICES` = "MOCS", 
+                           `OFFICE OF ADMINISTRATIVE TRIALS AND HEARINGS`= "OATH", 
+                           `OFFICE OF EMERGENCY MANAGEMENT` = "OEM", 
+                           `OFFICE OF LABOR RELATIONS` = "OLR", 
+                           `OFFICE OF MANAGEMENT AND BUDGET` = "OMB", 
+                           `OFFICE OF THE MAYOR` = "MAYORS", 
+                           `POLICE DEPARTMENT` = "NYPD" )
+  return(r1)
+}
+
+r1_2018 <- clean(r_2018)
+r1_2019 <- clean(r_2019)
+r1_2020 <- clean(r_2020)
+```
+
+```{r}
+# get avg pay ----------
+avg_pay <- function(r1) {
+  r1$lower_pay <- as.numeric(unlist(lapply(strsplit(r1$pay_band, "-"), "[", 1)))
+  r1$higher_pay <- as.numeric(unlist(lapply(strsplit(r1$pay_band, "-"), "[", 2)))
+  r1$avg_pay <- (r1$lower_pay + r1$higher_pay) /2
+  return(r1)
+}
+r1_2018 <- avg_pay(r1_2018)
+r1_2019 <- avg_pay(r1_2019)
+r1_2020 <- avg_pay(r1_2020)
+```
+
+# ***TO DO: UPDATE BELOW***
+
+```{r}
+# recode race & ethnicity --------
+r1$race1 <- as.character(r1$race)
+u= c("Two or More Races", "American Indian or Alaska Native", 
+     "Unknown or Choose Not to Disclose")
+r1$race1[r1$race1 %in% u]  <- "Other" 
+r1$race1[r1$race1 == "Native Hawaiian or Pacific Islander"] <- "Asian"
+r1$race_ethnicity <- r1$race1
+r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity <- 
+  rep("Hispanic/Latino", length(r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity) )
+r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & 
+     r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <- 
+  rep("Other", length(r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity) ) 
+
+# filter to full-time ---------
+r2 <- r1 %>% filter(employee_status=="Full-Time")
+
+# eda demographic changes -----------
+
+city_pop <- r2 %>% group_by(data_year) %>% 
+  summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
+            number_of_employees_middle = sum(number_of_employees_middle),
+            number_of_employees_top= sum(number_of_employees_top)) %>% 
+  mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
+         pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
+         pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
+         diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
+         diff_top = number_of_employees_top - lag(number_of_employees_top),
+         diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom)) 
+
+####
+city_race <- r2 %>% group_by(data_year, race_ethnicity) %>% 
+  summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
+            number_of_employees_middle = sum(number_of_employees_middle),
+            number_of_employees_top= sum(number_of_employees_top)) %>% 
+  group_by(race_ethnicity) %>%
+  arrange(data_year, race_ethnicity) %>%
+  mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
+         pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
+         pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
+         diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
+         diff_top = number_of_employees_top - lag(number_of_employees_top),
+         diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
+
+####
+city_gender <- r2 %>% group_by(data_year, gender) %>% 
+  summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
+            number_of_employees_middle = sum(number_of_employees_middle),
+            number_of_employees_top= sum(number_of_employees_top)) %>% 
+  group_by(gender) %>%
+  arrange(data_year, gender) %>%
+  mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
+         pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
+         pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
+         diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
+         diff_top = number_of_employees_top - lag(number_of_employees_top),
+         diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
+
+
+####
+agency_pop <- r2 %>% group_by(data_year, agency_name) %>% 
+  summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
+            number_of_employees_middle = sum(number_of_employees_middle),
+            number_of_employees_top= sum(number_of_employees_top)) %>% 
+  group_by(agency_name) %>%
+  arrange(data_year, agency_name) %>%
+  mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
+         pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
+         pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
+         diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
+         diff_top = number_of_employees_top - lag(number_of_employees_top),
+         diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
+
+####
+agency_race <- r2 %>% group_by(data_year, agency_name, race_ethnicity) %>% 
+  summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
+            number_of_employees_middle = sum(number_of_employees_middle),
+            number_of_employees_top= sum(number_of_employees_top)) %>% 
+  group_by(agency_name, race_ethnicity) %>%
+  arrange(agency_name, data_year, race_ethnicity) %>%
+  mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
+         pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
+         pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
+         diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
+         diff_top = number_of_employees_top - lag(number_of_employees_top),
+         diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
+
+####
+agency_gender <- r2 %>% group_by(data_year, agency_name, gender) %>% 
+  summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
+            number_of_employees_middle = sum(number_of_employees_middle),
+            number_of_employees_top= sum(number_of_employees_top)) %>% 
+  group_by(agency_name, gender) %>%
+  arrange(agency_name, data_year, gender) %>%
+  mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
+         pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
+         pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
+         diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
+         diff_top = number_of_employees_top - lag(number_of_employees_top),
+         diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
+
+# focus on agencies who did poorly on our diversity metrics ------
+# DSNY - gender (100)
+# FDNY - gender (95)
+# DOP - race (97)
+# ACS - race (94)
+# DHS - race (100)
+# DOC - race (80)
+# HRA - race (79)
+# LPC - race (71)
+
+poor_agency_race <- agency_race %>%  
+  filter(agency_name %in% c('DOP', 'ACS', 'DHS', 'DOC', 'HRA', 'LPC'))
+
+poor_agency_gender <- agency_gender %>%  
+  filter(agency_name %in% c('DSNY', 'FDNY'))
+
+
+
+# eda plots ------------
+
+#cp <- city_pop %>% 
+#cp <- city_race %>% 
+cp <- poor_agency_gender %>%
+  select(data_year, pct.chg_middle, diff_middle) %>% 
+  mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100,
+         pct.chg_middle = case_when(data_year==2018 ~ 0, TRUE ~ pct.chg_middle),
+         diff_middle = case_when(data_year==2018 ~ 0, TRUE ~ diff_middle))
+
+cp$data_year <- sub("2018", "baseline", cp$data_year )
+
+cp %>%  filter(agency_name =='FDNY') %>% 
+  ggplot(aes(x = pct.chg_middle, y = diff_middle)) +
+  geom_line(color = "#666666") + 
+  facet_wrap(~gender, nrow=1) +
+  geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
+  geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
+  geom_point(aes(color=data_year)) +
+  hrbrthemes::theme_ipsum() +
+  ggtitle("FDNY Gender") + xlab("Percent Change") + ylab("Relative Difference")
+
+ggsave("../visuals/citywide_race_raw_vs_pct.png")
+
+
+cp <- poor_agency_race %>%
+  select(data_year, pct.chg_middle, diff_middle) %>% 
+  mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100,
+         pct.chg_middle = case_when(data_year==2018 ~ 0, TRUE ~ pct.chg_middle),
+         diff_middle = case_when(data_year==2018 ~ 0, TRUE ~ diff_middle))
+
+cp %>%  filter(agency_name =='ACS') %>% 
+  ggplot(aes(x = pct.chg_middle, y = diff_middle)) +
+  geom_line(color = "#666666") + 
+  facet_wrap(~race_ethnicity, nrow=1) +
+  geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
+  geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
+  geom_point(aes(color=data_year)) +
+  hrbrthemes::theme_ipsum() +
+  ggtitle("ACS Race") + xlab("Percent Change") + ylab("Relative Difference")
+
+
+ggsave("../visuals/DHS_race_raw_vs_pct.png")
+```
