@@ -98,26 +98,7 @@ r1_2020 <- avg_pay(r1_2020)
 ```
 
 ```{r}
-# unique(r1_2018$race)
-# unique(r1_2018$ethnicity)
-unique(r1_2018$race_ethnicity)
-```
-
-```{r}
-unique(r1_2018$race)
-```
-```{r}
-unique(r1_2018$ethnicity)
-```
-
-```{r}
-unique(r1_2018$race1)
-```
-
-
 # ***TO DO: UPDATE NAMING CONVENTIONS***
-
-```{r}
 recode_re <- function(r1) {
   temp <- r1
   temp$race1 <- as.character(temp$race)
@@ -146,36 +127,15 @@ recode_re <- function(r1) {
 ```
 
 ```{r}
-temp <- r1_2018
-temp <- recode_re(r1_2018)
+r1_2018 <- recode_re(r1_2018)
+r1_2019 <- recode_re(r1_2019)
+r1_2020 <- recode_re(r1_2020)
 ```
 
 ```{r}
-# unique(r1_2018$race)
-# unique(r1_2018$ethnicity)
-unique(temp$race_ethnicity)
-```
+# ----- IGNORE: ORIGINAL CODE -----
 
-```{r}
-unique(temp$race)
-```
-
-```{r}
-unique(temp$ethnicity)
-```
-
-```{r}
-unique(temp$race1)
-```
-
-```{r}
-head(temp)
-```
-
-# ***TO DO: UPDATE BELOW***
-
-```{r}
-# recode race & ethnicity --------
+# # recode race & ethnicity --------
 # r1$race1 <- as.character(r1$race)
 # u= c("Two or More Races", "American Indian or Alaska Native", 
 #      "Unknown or Choose Not to Disclose")
@@ -186,11 +146,21 @@ head(temp)
 #   rep("Hispanic/Latino", length(r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity) )
 # r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & 
 #      r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <- 
-#   rep("Other", length(r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity) ) 
+#   rep("Other", length(r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity)) 
 
+# ----- IGNORE: ORIGINAL CODE -----
+```
+
+```{r}
 # filter to full-time ---------
-r2 <- r1 %>% filter(employee_status=="Full-Time")
+r2_2018 <- r1_2018 %>% filter(employee_status=="Full-Time")
+r2_2019 <- r1_2019 %>% filter(employee_status=="Full-Time")
+r2_2020 <- r1_2020 %>% filter(employee_status=="Full-Time")
+```
 
+# ***TO DO: UPDATE BELOW***
+
+```{r}
 # eda demographic changes -----------
 
 city_pop <- r2 %>% group_by(data_year) %>% 
