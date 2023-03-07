@@ -19,50 +19,42 @@ r <- read.socrata("https://data.cityofnewyork.us/resource/423i-ukqr.json?$limit=
 ```
 
 ```{r}
-# ***TO DO: GET NEW DATA***
-r_2018 <- filter(r, data_year == "2018")
-r_2019 <- filter(r, data_year == "2019")
-r_2020 <- filter(r, data_year == "2020")
-```
-
-```{r}
 # cleaning data -----------
-clean <- function(r) {
-  r$number_of_employees_middle <- as.numeric(gsub("<5", "2.5", r$number_of_employees))
-  r$number_of_employees_top <- as.numeric(gsub("<5", "4", r$number_of_employees))
-  r$number_of_employees_bottom <- as.numeric(gsub("<5", "1", r$number_of_employees))
-  r$agency_name <- gsub("'", "", r$agency_name)
-  r$gender <- gsub("Unknown or Choose Not to Disclose", "Unknown", r$gender)
+r$number_of_employees_middle <- as.numeric(gsub("<5", "2.5", r$number_of_employees))
+r$number_of_employees_top <- as.numeric(gsub("<5", "4", r$number_of_employees))
+r$number_of_employees_bottom <- as.numeric(gsub("<5", "1", r$number_of_employees))
+r$agency_name <- gsub("'", "", r$agency_name)
+r$gender <- gsub("Unknown or Choose Not to Disclose", "Unknown", r$gender)
   
-  # shorten the names, to acroynms of agencies for diagnostic plots ----
-  r1 <- r %>%  mutate_at(vars(c(1:3,7:10)), as.factor)
+# shorten the names, to acroynms of agencies for diagnostic plots ----
+r1 <- r %>%  mutate_at(vars(c(1:3,7:10)), as.factor)
   
-  r1$agency <- r1$agency_name
+r1$agency <- r1$agency_name
   
-  r1$agency_name <- recode(r1$agency, 
-                           `ADMINISTRATION FOR CHILDRENS SERVICES` = "ACS", 
-                           `BUSINESS INTEGRITY COMMISSION` = "BIC", 
-                           `DEPARTMENT FOR THE AGING` = "DFTA", 
-                           `DEPARTMENT OF BUILDINGS` = "DOB", 
-                           `DEPARTMENT OF CITY PLANNING` = "DCP", 
-                           `DEPARTMENT OF CITYWIDE ADMINISTRATIVE SERVICES` = "DCAS", 
-                           `DEPARTMENT OF CONSUMER AFFAIRS` = "DCA", 
-                           `DEPARTMENT OF CORRECTION` = "DOC", 
-                           `DEPARTMENT OF CULTURAL AFFAIRS` = "DCLA", 
-                           `DEPARTMENT OF DESIGN AND CONSTRUCTION` = "DDC", 
-                           `DEPARTMENT OF EDUCATION (NON-PEDAGOGICAL)` = "DOE*", 
-                           `DEPARTMENT OF ENVIRONMENTAL PROTECTION` = "DEP", 
-                           `DEPARTMENT OF FINANCE` = "DOF", 
-                           `DEPARTMENT OF HEALTH AND MENTAL HYGIENE` = "DOHMH", 
-                           `DEPARTMENT OF HOMELESS SERVICES` = "DHS", 
-                           `DEPARTMENT OF INFORMATION TECHNOLOGY AND TELECOMMUNICATIONS` = "DOITT",
-                           `DEPARTMENT OF INVESTIGATION` = "DOI", 
-                           `DEPARTMENT OF PARKS AND RECREATION` = "PARKS", 
-                           `DEPARTMENT OF PROBATION` = "DOP", 
-                           `DEPARTMENT OF RECORDS AND INFORMATION SERVICES` = "DORIS", 
-                           `DEPARTMENT OF SANITATION` = "DSNY", 
-                           `DEPARTMENT OF SMALL BUSINESS SERVICES` = "SBS", 
-                           `DEPARTMENT OF TRANSPORTATION` = "DOT", 
+r1$agency_name <- recode(r1$agency, 
+                         `ADMINISTRATION FOR CHILDRENS SERVICES` = "ACS",
+                         `BUSINESS INTEGRITY COMMISSION` = "BIC", 
+                         `DEPARTMENT FOR THE AGING` = "DFTA", 
+                         `DEPARTMENT OF BUILDINGS` = "DOB", 
+                         `DEPARTMENT OF CITY PLANNING` = "DCP", 
+                         `DEPARTMENT OF CITYWIDE ADMINISTRATIVE SERVICES` = "DCAS",
+                         `DEPARTMENT OF CONSUMER AFFAIRS` = "DCA", 
+                         `DEPARTMENT OF CORRECTION` = "DOC", 
+                         `DEPARTMENT OF CULTURAL AFFAIRS` = "DCLA", 
+                         `DEPARTMENT OF DESIGN AND CONSTRUCTION` = "DDC", 
+                         `DEPARTMENT OF EDUCATION (NON-PEDAGOGICAL)` = "DOE*", 
+                         `DEPARTMENT OF ENVIRONMENTAL PROTECTION` = "DEP", 
+                         `DEPARTMENT OF FINANCE` = "DOF", 
+                         `DEPARTMENT OF HEALTH AND MENTAL HYGIENE` = "DOHMH", 
+                         `DEPARTMENT OF HOMELESS SERVICES` = "DHS", 
+                         `DEPARTMENT OF INFORMATION TECHNOLOGY AND TELECOMMUNICATIONS` = "DOITT",
+                         `DEPARTMENT OF INVESTIGATION` = "DOI", 
+                         `DEPARTMENT OF PARKS AND RECREATION` = "PARKS", 
+                         `DEPARTMENT OF PROBATION` = "DOP", 
+                         `DEPARTMENT OF RECORDS AND INFORMATION SERVICES` = "DORIS", 
+                         `DEPARTMENT OF SANITATION` = "DSNY", 
+                         `DEPARTMENT OF SMALL BUSINESS SERVICES` = "SBS", 
+                         `DEPARTMENT OF TRANSPORTATION` = "DOT", 
                            `DEPARTMENT OF VETERANS SERVICES` = "DVS", 
                            `DEPARTMENT OF YOUTH AND COMMUNITY DEVELOPMENT` = "DYCD", 
                            `FIRE DEPARTMENT` = "FDNY", 
@@ -76,25 +68,13 @@ clean <- function(r) {
                            `OFFICE OF MANAGEMENT AND BUDGET` = "OMB", 
                            `OFFICE OF THE MAYOR` = "MAYORS", 
                            `POLICE DEPARTMENT` = "NYPD" )
-  return(r1)
-}
-
-r1_2018 <- clean(r_2018)
-r1_2019 <- clean(r_2019)
-r1_2020 <- clean(r_2020)
 ```
 
 ```{r}
 # get avg pay ----------
-avg_pay <- function(r1) {
-  r1$lower_pay <- as.numeric(unlist(lapply(strsplit(r1$pay_band, "-"), "[", 1)))
-  r1$higher_pay <- as.numeric(unlist(lapply(strsplit(r1$pay_band, "-"), "[", 2)))
-  r1$avg_pay <- (r1$lower_pay + r1$higher_pay) /2
-  return(r1)
-}
-r1_2018 <- avg_pay(r1_2018)
-r1_2019 <- avg_pay(r1_2019)
-r1_2020 <- avg_pay(r1_2020)
+r1$lower_pay <- as.numeric(unlist(lapply(strsplit(r1$pay_band, "-"), "[", 1)))
+r1$higher_pay <- as.numeric(unlist(lapply(strsplit(r1$pay_band, "-"), "[", 2)))
+r1$avg_pay <- (r1$lower_pay + r1$higher_pay) /2
 ```
 
 ```{r}
@@ -127,9 +107,7 @@ recode_re <- function(r1) {
 ```
 
 ```{r}
-r1_2018 <- recode_re(r1_2018)
-r1_2019 <- recode_re(r1_2019)
-r1_2020 <- recode_re(r1_2020)
+r1 <- recode_re(r1)
 ```
 
 ```{r}
@@ -153,12 +131,8 @@ r1_2020 <- recode_re(r1_2020)
 
 ```{r}
 # filter to full-time ---------
-r2_2018 <- r1_2018 %>% filter(employee_status=="Full-Time")
-r2_2019 <- r1_2019 %>% filter(employee_status=="Full-Time")
-r2_2020 <- r1_2020 %>% filter(employee_status=="Full-Time")
+r2 <- r1 %>% filter(employee_status=="Full-Time")
 ```
-
-# ***TO DO: UPDATE BELOW***
 
 ```{r}
 # eda demographic changes -----------
@@ -244,7 +218,10 @@ agency_gender <- r2 %>% group_by(data_year, agency_name, gender) %>%
          diff_middle = number_of_employees_middle - lag(number_of_employees_middle),
          diff_top = number_of_employees_top - lag(number_of_employees_top),
          diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
+```
 
+```{r}
+# ----- IGNORE: ORIGINAL CODE -----
 # focus on agencies who did poorly on our diversity metrics ------
 # DSNY - gender (100)
 # FDNY - gender (95)
@@ -254,15 +231,34 @@ agency_gender <- r2 %>% group_by(data_year, agency_name, gender) %>%
 # DOC - race (80)
 # HRA - race (79)
 # LPC - race (71)
+# ----- IGNORE: ORIGINAL CODE -----
+
+# new agencies
+# DOITT - gender
+# FDNY - gender
+# NYPD - gender
+# DSNY - gender
+# DEP - gender
+# DHS - race
+# ACS - race
+# DOP - race
 
 poor_agency_race <- agency_race %>%  
-  filter(agency_name %in% c('DOP', 'ACS', 'DHS', 'DOC', 'HRA', 'LPC'))
-
+  filter(agency_name %in% c('DHS', 'ACS', 'DOP'))
 poor_agency_gender <- agency_gender %>%  
-  filter(agency_name %in% c('DSNY', 'FDNY'))
+  filter(agency_name %in% c('DSNY', 'FDNY', 'NYPD', 'DSNY', 'DEP'))
+```
+
+```{r}
+poor_agency_gender %>%
+  select(data_year, pct.chg_middle, diff_middle) %>% 
+  mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100)
+```
 
 
+# ***TO DO: UPDATE BELOW***
 
+```{r}
 # eda plots ------------
 
 #cp <- city_pop %>% 
@@ -305,5 +301,5 @@ cp %>%  filter(agency_name =='ACS') %>%
   ggtitle("ACS Race") + xlab("Percent Change") + ylab("Relative Difference")
 
 
-ggsave("../visuals/DHS_race_raw_vs_pct.png")
+ggsave("../visuals/ACS_race_raw_vs_pct.png")
 ```
