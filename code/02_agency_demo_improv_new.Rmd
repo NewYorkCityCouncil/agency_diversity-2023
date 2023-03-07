@@ -97,21 +97,96 @@ r1_2019 <- avg_pay(r1_2019)
 r1_2020 <- avg_pay(r1_2020)
 ```
 
+```{r}
+# unique(r1_2018$race)
+# unique(r1_2018$ethnicity)
+unique(r1_2018$race_ethnicity)
+```
+
+```{r}
+unique(r1_2018$race)
+```
+```{r}
+unique(r1_2018$ethnicity)
+```
+
+```{r}
+unique(r1_2018$race1)
+```
+
+
+# ***TO DO: UPDATE NAMING CONVENTIONS***
+
+```{r}
+recode_re <- function(r1) {
+  temp <- r1
+  temp$race1 <- as.character(temp$race)
+  u= c("Two or More Races",
+       "American Indian or Alaska Native",
+       "Unknown or Choose Not to Disclose")
+  temp$race1[temp$race1 %in% u]  <- "Other"
+  temp$race1[temp$race1 == "Native Hawaiian or Pacific Islander" | temp$race1 == "Asian"] <- "Asian"
+  temp$race1[temp$race1 == "Black or African American"] <- "Black"
+  
+  temp$race_ethnicity <- temp$race1
+  
+  temp <- temp %>% mutate(race_ethnicity = recode(race1, "Black" = "NH Black", # BLACK ALONE
+                                                     "White" = "NH White", # WHITE ALONE
+                                                     "Other" = "NH SOR or Race UCND", # AMERICAN INDIAN ALONE, # NATIVE, NOT SPEC/NO OTHER, AK NATIVE ALONE, SOR, TWO OR MORE
+                                                     "Asian" = "NH Asian")) # ASIAN ALONE | NATIVE HAWAIIAN OR PACIFIC ISL
+    temp[temp$ethnicity=="Unknown or Choose Not to Disclose" &
+     temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <-
+  rep("Ethnicity Unknown or Choose Not to Disclose", length(temp[temp$ethnicity=="Unknown or Choose Not to Disclose" & temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity))
+  
+  temp[temp$ethnicity=="Hispanic or Latino",]$race_ethnicity <-
+  rep("Hispanic or Latino", length(temp[temp$ethnicity=="Hispanic or Latino",]$race_ethnicity))
+  temp$race1[temp$race1 == "Unknown or Choose Not to Disclose"] <- "NH SOR or Race UCND"
+  return(temp)
+}
+```
+
+```{r}
+temp <- r1_2018
+temp <- recode_re(r1_2018)
+```
+
+```{r}
+# unique(r1_2018$race)
+# unique(r1_2018$ethnicity)
+unique(temp$race_ethnicity)
+```
+
+```{r}
+unique(temp$race)
+```
+
+```{r}
+unique(temp$ethnicity)
+```
+
+```{r}
+unique(temp$race1)
+```
+
+```{r}
+head(temp)
+```
+
 # ***TO DO: UPDATE BELOW***
 
 ```{r}
 # recode race & ethnicity --------
-r1$race1 <- as.character(r1$race)
-u= c("Two or More Races", "American Indian or Alaska Native", 
-     "Unknown or Choose Not to Disclose")
-r1$race1[r1$race1 %in% u]  <- "Other" 
-r1$race1[r1$race1 == "Native Hawaiian or Pacific Islander"] <- "Asian"
-r1$race_ethnicity <- r1$race1
-r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity <- 
-  rep("Hispanic/Latino", length(r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity) )
-r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & 
-     r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <- 
-  rep("Other", length(r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity) ) 
+# r1$race1 <- as.character(r1$race)
+# u= c("Two or More Races", "American Indian or Alaska Native", 
+#      "Unknown or Choose Not to Disclose")
+# r1$race1[r1$race1 %in% u]  <- "Other" 
+# r1$race1[r1$race1 == "Native Hawaiian or Pacific Islander"] <- "Asian"
+# r1$race_ethnicity <- r1$race1
+# r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity <- 
+#   rep("Hispanic/Latino", length(r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity) )
+# r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & 
+#      r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <- 
+#   rep("Other", length(r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity) ) 
 
 # filter to full-time ---------
 r2 <- r1 %>% filter(employee_status=="Full-Time")

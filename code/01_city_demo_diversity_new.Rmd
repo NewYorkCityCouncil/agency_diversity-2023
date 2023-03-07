@@ -64,7 +64,7 @@ recode_df <- function(df) {
                                                      "7" = "NH Asian", # NATIVE HAWAIIAN OR PACIFIC ISL
                                                      "8" = "NH SOR or Race UCND", # SOR
                                                      "9" = "NH SOR or Race UCND"), # TWO OR MORE
-                      RAC1P = recode(RAC1P,  "1" = "White", 
+                      RAC1P = recode(RAC1P,  "1" = "White",
                                      "2" = "Black",
                                      "3" = "Other",
                                      "4" = "Other",
@@ -166,6 +166,13 @@ write.csv(df_18_2, '../data/city_demo_2018_pums.csv', row.names = F)
 write.csv(df_19_2, '../data/city_demo_2019_pums.csv', row.names = F)
 write.csv(df_20_2, '../data/city_demo_2020_pums.csv', row.names = F)
 ```
+
+```{r}
+unique(df_18_2$RAC1P)
+# unique(df_18_2$ethnicity)
+unique(df_18_2$race_ethnicity)
+```
+
 
 ```{r}
 # City demographics -----
