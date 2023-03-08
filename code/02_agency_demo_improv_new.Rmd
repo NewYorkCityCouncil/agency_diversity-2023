@@ -95,16 +95,34 @@ recode_re <- function(r1) {
                                                      "White" = "NH White", # WHITE ALONE
                                                      "Other" = "NH SOR or Race UCND", # AMERICAN INDIAN ALONE, # NATIVE, NOT SPEC/NO OTHER, AK NATIVE ALONE, SOR, TWO OR MORE
                                                      "Asian" = "NH Asian")) # ASIAN ALONE | NATIVE HAWAIIAN OR PACIFIC ISL
-    temp[temp$ethnicity=="Unknown or Choose Not to Disclose" &
-     temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <-
-  rep("Ethnicity Unknown or Choose Not to Disclose", length(temp[temp$ethnicity=="Unknown or Choose Not to Disclose" & temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity))
+  
+  # temp[temp$ethnicity=="Unknown or Choose Not to Disclose" &
+  #    temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <-
+  # rep("Ethnicity Unknown or Choose Not to Disclose", length(temp[temp$ethnicity=="Unknown or Choose Not to Disclose" & temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity))
+  
+  temp[temp$ethnicity=="Unknown or Choose Not to Disclose",]$race_ethnicity <-
+  rep("Ethnicity Unknown or Choose Not to Disclose", length(temp[temp$ethnicity=="Unknown or Choose Not to Disclose",]$race_ethnicity))
   
   temp[temp$ethnicity=="Hispanic or Latino",]$race_ethnicity <-
   rep("Hispanic or Latino", length(temp[temp$ethnicity=="Hispanic or Latino",]$race_ethnicity))
+  
   temp$race1[temp$race1 == "Unknown or Choose Not to Disclose"] <- "NH SOR or Race UCND"
   return(temp)
 }
 ```
+
+```{r}
+#unique(r1$race)
+unique(r1$ethnicity)
+#unique(r1$race1)
+unique(r1$race_ethnicity)
+```
+```{r}
+r1_t <- r1 %>%
+  select(race, ethnicity, race1, race_ethnicity)
+r1_t #[r1_t$ethnicity == "Unknown or Choose Not to Disclose",]
+```
+
 
 ```{r}
 r1 <- recode_re(r1)
@@ -246,15 +264,8 @@ agency_gender <- r2 %>% group_by(data_year, agency_name, gender) %>%
 poor_agency_race <- agency_race %>%  
   filter(agency_name %in% c('DHS', 'ACS', 'DOP'))
 poor_agency_gender <- agency_gender %>%  
-  filter(agency_name %in% c('DSNY', 'FDNY', 'NYPD', 'DSNY', 'DEP'))
+  filter(agency_name %in% c('DSNY', 'FDNY', 'NYPD', 'DOITT', 'DEP'))
 ```
-
-```{r}
-poor_agency_gender %>%
-  select(data_year, pct.chg_middle, diff_middle) %>% 
-  mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100)
-```
-
 
 # ***TO DO: UPDATE BELOW***
 
@@ -271,7 +282,7 @@ cp <- poor_agency_gender %>%
 
 cp$data_year <- sub("2018", "baseline", cp$data_year )
 
-cp %>%  filter(agency_name =='FDNY') %>% 
+cp %>%  filter(agency_name =='DEP') %>% 
   ggplot(aes(x = pct.chg_middle, y = diff_middle)) +
   geom_line(color = "#666666") + 
   facet_wrap(~gender, nrow=1) +
@@ -279,9 +290,10 @@ cp %>%  filter(agency_name =='FDNY') %>%
   geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
   geom_point(aes(color=data_year)) +
   hrbrthemes::theme_ipsum() +
-  ggtitle("FDNY Gender") + xlab("Percent Change") + ylab("Relative Difference")
+  ggtitle("DEP Gender") + xlab("Percent Change") + ylab("Relative Difference")
 
-ggsave("../visuals/citywide_race_raw_vs_pct.png")
+#ggsave("../visuals/DEP_gender_raw_vs_pct.png")
+#ggsave("../visuals/citywide_race_raw_vs_pct.png")
 
 
 cp <- poor_agency_race %>%
@@ -290,7 +302,7 @@ cp <- poor_agency_race %>%
          pct.chg_middle = case_when(data_year==2018 ~ 0, TRUE ~ pct.chg_middle),
          diff_middle = case_when(data_year==2018 ~ 0, TRUE ~ diff_middle))
 
-cp %>%  filter(agency_name =='ACS') %>% 
+cp %>%  filter(agency_name =='DOP') %>% 
   ggplot(aes(x = pct.chg_middle, y = diff_middle)) +
   geom_line(color = "#666666") + 
   facet_wrap(~race_ethnicity, nrow=1) +
@@ -298,8 +310,8 @@ cp %>%  filter(agency_name =='ACS') %>%
   geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
   geom_point(aes(color=data_year)) +
   hrbrthemes::theme_ipsum() +
-  ggtitle("ACS Race") + xlab("Percent Change") + ylab("Relative Difference")
+  ggtitle("DOP Race") + xlab("Percent Change") + ylab("Relative Difference")
 
 
-ggsave("../visuals/ACS_race_raw_vs_pct.png")
+ ggsave("../visuals/DOP_race_raw_vs_pct.png")
 ```
