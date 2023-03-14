@@ -3,8 +3,6 @@ title: "01_city_demo_diversity_metric_new"
 output: html_document
 ---
 
-**---- DON'T TOUCH ----**
-
 ```{r setup}
 # R version
 
@@ -57,9 +55,6 @@ df_20 = convert_df(t_20)
 ```{r}
 # ----- ***TO DO***: RECODE DEFINITIONS FROM 00_Data_Cleaning -----
 # UCND = "Unknown or Choose Not to Disclose"
-
-# NOTE: NO "Ethnicity Unknown or Choose Not to Disclose" ?? - we can get race unkown (if you count 5 (maybe), 8, 9, but ethnicity not detailed - we do know hispanic/not hispanic so i don't think we could say completely unkown?. not set up like 02_
-
 recode_df <- function(df) {
   new_df <- df %>% mutate(race_ethnicity = recode(RAC1P, "1" = "NH White", # WHITE ALONE
                                                      "2" = "NH Black", # BLACK ALONE
@@ -99,30 +94,11 @@ recode_df <- function(df) {
 }
 ```
 
-
-```{r}
-head(df_18)
-```
-
-```{r}
-unique(df_18_2$PUMA)
-
-```
-
-
 ```{r}
 df_18_1 <- recode_df(df_18)
 df_19_1 <- recode_df(df_19)
 df_20_1 <- recode_df(df_20)
 ```
-
-```{r}
-head(df_18_1)
-unique(df_18_1$RAC1P)
-unique(df_18_1$HISP)
-unique(df_18_1$race_ethnicity)
-```
-
 
 ```{r}
 # get person weight values ---------
@@ -138,64 +114,17 @@ df_19_2 <- pw_value(df_19_1)
 df_20_2 <- pw_value(df_20_1)
 ```
 
-```{r} 
-# ----- IGNORE: ORIGINAL CODE -----
-
-# # Recode Info -------------
-# # White alone	1
-# # Black or African American alone	2
-# # American Indian alone	3
-# # Alaska Native alone	4
-# # American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races	5
-# # Asian alone	6
-# # Native Hawaiian and Other Pacific Islander alone	7
-# # Some Other Race alone	8
-# # Two or More Races	9
-# 
-# # recode variables ---------------
-# df1  <- df %>% mutate(RAC1P = recode(RAC1P,  "1" = "White", 
-#                                              "2" = "Black",
-#                                              "3" = "Other",
-#                                              "4" = "Other",
-#                                              "5" = "Other",
-#                                              "6" = "Asian",
-#                                              "7" = "Asian",
-#                                              "8" = "Other",
-#                                              "9" = "Other"),
-#                       SEX = recode(SEX, "1" = "Male",
-#                                         "2" = "Female"),
-#                       HISP = case_when(HISP != "1" ~ "Hispanic", 
-#                                        TRUE ~ "Non-Hispanic"),
-#                       race_ethnicity = case_when(HISP == "Non-Hispanic" ~ RAC1P,
-#                                                  TRUE ~ "Hispanic"),
-#                       ESR = recode(ESR, `0` = "Less than 16", 
-#                                         `6` = "Not in Labor Force",
-#                                         `1` = "Employed",
-#                                         `2` = "Employed",
-#                                         `3` = "Unemployed",
-#                                         `4` = "Armed Forces",
-#                                         `5` = "Armed Forces"),
-#                       labor_force = case_when(ESR == "Employed" | ESR == "Unemployed" ~ 1,
-#                                               TRUE ~ 0) )
-# 
-# # get person weight values ---------
-# 
-# df2 <- df1 %>% 
-#   mutate(PWGTP = as.numeric(PWGTP)) %>% 
-#   uncount(PWGTP, .remove = F) # make each row an individual
-
-# ----- IGNORE: ORIGINAL CODE -----
-```
-
-```{r}
-# total pop of NYC check - should be around 8 million/year
+```{r, include=FALSE}
+# ----- check population totals 
+# should be around 8 million/year
 sum(as.integer(df_18_1$PWGTP))
 sum(as.integer(df_19_1$PWGTP))
-sum(as.integer(df_20_1$PWGTP))
+sum(as.integer(df_20_1$PWGTP)) # looking good
 ```
 
 ```{r}
-# DISAGGREGATED INDIVIDUAL LEVEL
+# individual level demos ----- 
+# whereas df_[year]_1 is aggregated by total of x demographic
 write.csv(df_18_2, '../data/city_demo_2018_pums.csv', row.names = F)
 write.csv(df_19_2, '../data/city_demo_2019_pums.csv', row.names = F)
 write.csv(df_20_2, '../data/city_demo_2020_pums.csv', row.names = F)
@@ -217,7 +146,6 @@ filter_race <- function(df2) {
   mutate(percent = count/sum(count) * 100)
   return(race)
 }
-
 race_18 <- filter_race(df_18_2)
 race_19 <- filter_race(df_19_2)
 race_20 <- filter_race(df_20_2)
@@ -233,7 +161,6 @@ filter_gender <- function(df2) {
   mutate(percent = count/sum(count) * 100)
   return(gender)
 }
-
 sex_18 <- filter_gender(df_18_2)
 sex_19 <- filter_gender(df_19_2)
 sex_20 <- filter_gender(df_20_2)
@@ -280,9 +207,9 @@ city_asian_19 <- get_var(race_19, race_19$race_ethnicity, "NH Asian")
 city_asian_20 <- get_var(race_20, race_20$race_ethnicity, "NH Asian") 
 
 # sor:
-city_sor_18 <- get_var(race_18, race_18$race_ethnicity, "NH Ethnicity Unknown or Choose Not to Disclose")
-city_sor_19 <- get_var(race_19, race_19$race_ethnicity, "NH Ethnicity Unknown or Choose Not to Disclose")
-city_sor_20 <- get_var(race_20, race_20$race_ethnicity, "NH Ethnicity Unknown or Choose Not to Disclose")
+city_sor_18 <- get_var(race_18, race_18$race_ethnicity, "NH Other")
+city_sor_19 <- get_var(race_19, race_19$race_ethnicity, "NH Other")
+city_sor_20 <- get_var(race_20, race_20$race_ethnicity, "NH Other")
 ```
 
 ```{r}
@@ -294,8 +221,6 @@ wp_20 <- read.csv("../data/Agency_Diversity_20.csv") %>% janitor::clean_names()
 ```
 
 ```{r}
-# ***TO DO: distance to city diversity calculations for ALL 2018-2020***
-# RH - UNDERSTAND WHAT THESE CALCULATIONS DO
 run_calc <- function(wp, city_female, city_male, city_white, city_black, city_hispanic, city_asian, city_sor) {
   wp$d1 <- abs(wp$x_female - city_female) + abs(wp$x_male - city_male) +
   abs(wp$x_white - city_white) + abs(wp$x_black - city_black) +
@@ -338,15 +263,13 @@ wp$d5 <- abs(wp$x_female - city_female) / (wp$x_female + city_female) /2  +
 ```
 
 ```{r}
-# run_calc <- function(wp, city_female, city_male, city_white, city_black, city_hispanic, city_asian, city_sor)
+# ***TO DO: distance to city diversity calculations for ALL 2018-2020***
 wp_18 <- run_calc(wp_18, city_female_18, city_male_18, city_white_18, city_black_18, city_hispanic_18, city_asian_18, city_sor_18)
 wp_19 <- run_calc(wp_19, city_female_19, city_male_19, city_white_19, city_black_19, city_hispanic_19, city_asian_19, city_sor_19)
 wp_20 <- run_calc(wp_20, city_female_20, city_male_20, city_white_20, city_black_20, city_hispanic_20, city_asian_20, city_sor_20)
-# NOTE: sor technically = NH Ethnicity Unknown or Choose Not to Disclose
 ```
 
 ```{r}
-# RH - UNDERSTAND WHAT THESE CALCULATIONS DO
 run_calc_2 <- function(wp, city_female, city_male, city_white, city_black, city_hispanic, city_asian, city_sor) {
   wp$d3_norm <- (wp$d3 - min(wp$d3)) / (max(wp$d3) - min(wp$d3)) * 100
   wp$d4_norm <- (wp$d4 - min(wp$d4)) / (max(wp$d4) - min(wp$d4)) * 100
@@ -377,6 +300,9 @@ run_calc_2 <- function(wp, city_female, city_male, city_white, city_black, city_
   
   return(wp)
 }
+```
+
+```{r}
 # for github chart
 write.csv(run_calc_2(wp_18, city_female_18, city_male_18, city_white_18, city_black_18, city_hispanic_18, city_asian_18, city_sor_18), '../data/agency_diversity_calculations_18.csv', row.names = F)
 write.csv(run_calc_2(wp_19, city_female_19, city_male_19, city_white_19, city_black_19, city_hispanic_19, city_asian_19, city_sor_19), '../data/agency_diversity_calculations_19.csv', row.names = F)

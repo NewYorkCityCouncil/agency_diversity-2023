@@ -96,10 +96,6 @@ recode_re <- function(r1) {
                                                      "Other" = "NH SOR or Race UCND", # AMERICAN INDIAN ALONE, # NATIVE, NOT SPEC/NO OTHER, AK NATIVE ALONE, SOR, TWO OR MORE
                                                      "Asian" = "NH Asian")) # ASIAN ALONE | NATIVE HAWAIIAN OR PACIFIC ISL
   
-  # temp[temp$ethnicity=="Unknown or Choose Not to Disclose" &
-  #    temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <-
-  # rep("Ethnicity Unknown or Choose Not to Disclose", length(temp[temp$ethnicity=="Unknown or Choose Not to Disclose" & temp$race=="Unknown or Choose Not to Disclose",]$race_ethnicity))
-  
   temp[temp$ethnicity=="Unknown or Choose Not to Disclose",]$race_ethnicity <-
   rep("Ethnicity Unknown or Choose Not to Disclose", length(temp[temp$ethnicity=="Unknown or Choose Not to Disclose",]$race_ethnicity))
   
@@ -112,39 +108,7 @@ recode_re <- function(r1) {
 ```
 
 ```{r}
-#unique(r1$race)
-unique(r1$ethnicity)
-#unique(r1$race1)
-unique(r1$race_ethnicity)
-```
-```{r}
-r1_t <- r1 %>%
-  select(race, ethnicity, race1, race_ethnicity)
-r1_t #[r1_t$ethnicity == "Unknown or Choose Not to Disclose",]
-```
-
-
-```{r}
 r1 <- recode_re(r1)
-```
-
-```{r}
-# ----- IGNORE: ORIGINAL CODE -----
-
-# # recode race & ethnicity --------
-# r1$race1 <- as.character(r1$race)
-# u= c("Two or More Races", "American Indian or Alaska Native", 
-#      "Unknown or Choose Not to Disclose")
-# r1$race1[r1$race1 %in% u]  <- "Other" 
-# r1$race1[r1$race1 == "Native Hawaiian or Pacific Islander"] <- "Asian"
-# r1$race_ethnicity <- r1$race1
-# r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity <- 
-#   rep("Hispanic/Latino", length(r1[r1$ethnicity=="Hispanic or Latino",]$race_ethnicity) )
-# r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & 
-#      r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity <- 
-#   rep("Other", length(r1[r1$ethnicity=="Unknown or Choose Not to Disclose" & r1$race=="Unknown or Choose Not to Disclose",]$race_ethnicity)) 
-
-# ----- IGNORE: ORIGINAL CODE -----
 ```
 
 ```{r}
