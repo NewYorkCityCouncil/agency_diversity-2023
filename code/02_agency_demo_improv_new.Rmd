@@ -117,6 +117,19 @@ r2 <- r1 %>% filter(employee_status=="Full-Time")
 ```
 
 ```{r}
+city_po
+```
+
+```{r}
+r2 %>% group_by(data_year)
+r2$gender2 <- recode(r2$gender, 
+                    "Non-binary" = "Other",
+                    "Other Gender" = "Other",
+                    "Unknown" = "Other")
+```
+
+
+```{r}
 # eda demographic changes -----------
 
 city_pop <- r2 %>% group_by(data_year) %>% 
@@ -145,12 +158,12 @@ city_race <- r2 %>% group_by(data_year, race_ethnicity) %>%
          diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
 
 ####
-city_gender <- r2 %>% group_by(data_year, gender) %>% 
+city_gender <- r2 %>% group_by(data_year, gender2) %>% 
   summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
             number_of_employees_middle = sum(number_of_employees_middle),
             number_of_employees_top= sum(number_of_employees_top)) %>% 
-  group_by(gender) %>%
-  arrange(data_year, gender) %>%
+  group_by(gender2) %>%
+  arrange(data_year, gender2) %>%
   mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
          pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
          pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
@@ -188,12 +201,12 @@ agency_race <- r2 %>% group_by(data_year, agency_name, race_ethnicity) %>%
          diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
 
 ####
-agency_gender <- r2 %>% group_by(data_year, agency_name, gender) %>% 
+agency_gender <- r2 %>% group_by(data_year, agency_name, gender2) %>% 
   summarise(number_of_employees_bottom = sum(number_of_employees_bottom),
             number_of_employees_middle = sum(number_of_employees_middle),
             number_of_employees_top= sum(number_of_employees_top)) %>% 
-  group_by(agency_name, gender) %>%
-  arrange(agency_name, data_year, gender) %>%
+  group_by(agency_name, gender2) %>%
+  arrange(agency_name, data_year, gender2) %>%
   mutate(pct.chg_middle = formattable::percent((number_of_employees_middle - lag(number_of_employees_middle))/lag(number_of_employees_middle)),
          pct.chg_top = formattable::percent((number_of_employees_top- lag(number_of_employees_top))/lag(number_of_employees_top)),
          pct.chg_bottom = (formattable::percent(number_of_employees_bottom - lag(number_of_employees_bottom))/lag(number_of_employees_bottom)),
@@ -201,6 +214,10 @@ agency_gender <- r2 %>% group_by(data_year, agency_name, gender) %>%
          diff_top = number_of_employees_top - lag(number_of_employees_top),
          diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
 ```
+```{r}
+city_pop
+```
+
 
 ```{r}
 # ----- IGNORE: ORIGINAL CODE -----
@@ -243,7 +260,61 @@ cp <- poor_agency_gender %>%
   mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100,
          pct.chg_middle = case_when(data_year==2018 ~ 0, TRUE ~ pct.chg_middle),
          diff_middle = case_when(data_year==2018 ~ 0, TRUE ~ diff_middle))
+```
 
+```{r}
+poor_agency_gender[poor_agency_gender$agency_name == 'DEP',]
+1279/(1279+4208+12)
+1310/(1310+4226+3+2+17)
+1291/(1291+4054+3+3+19)
+```
+
+
+```{r}
+cp
+cp[cp$gender == 'Female',]
+cp$gender2 <- recode(cp$gender, 
+                    "Non-binary" = "Other",
+                    "Other Gender" = "Other",
+                    "Unknown" = "Other")
+```
+pct change is year to year not compared to 2018 now 
+
+```{r}
+city_gender
+```
+```{r}
+cp
+```
+
+
+
+```{r}
+p1 <- cp %>%  filter(agency_name =='DEP') %>% 
+  ggplot(aes(x = data_year, y = pct.chg_middle)) +
+  geom_line(color = "#666666") + 
+  facet_wrap(~gender2, nrow=1) +
+  #geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
+  #geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
+  geom_point(aes(color=data_year), show.legend = FALSE) +
+  hrbrthemes::theme_ipsum() +
+  ggtitle("DEP Gender") + xlab("Year") + ylab("Percent Change")
+
+p2 <- cp %>%  filter(agency_name =='DEP') %>% 
+  ggplot(aes(x = data_year, y = diff_middle)) +
+  geom_line(color = "#666666") + 
+  facet_wrap(~gender2, nrow=1) +
+  #geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
+  #geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
+  geom_point(aes(color=data_year)) +
+  hrbrthemes::theme_ipsum() +
+  ggtitle("DEP Gender") + xlab("Year") + ylab("Relative Difference")
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+
+```{r}
 cp$data_year <- sub("2018", "baseline", cp$data_year )
 
 cp %>%  filter(agency_name =='DEP') %>% 
