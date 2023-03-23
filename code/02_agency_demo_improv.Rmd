@@ -271,7 +271,7 @@ cp <- poor_agency_race %>%
 cp$race_ethnicity <- recode(cp$race_ethnicity, 
                     "Ethnicity Unknown or Choose Not to Disclose" = "Ethnicity UCND") # to fit better in plot
 
-percent_plot <- cp %>%  filter(agency_name =='DHS') %>% 
+percent_plot <- cp %>%  filter(agency_name =='DOP') %>% 
   ggplot(aes(x = data_year, y = pct.chg_middle)) +
   facet_wrap(~race_ethnicity, nrow=1) +
   geom_hline(yintercept=0, size = 0.25, color="grey") +
@@ -279,7 +279,7 @@ percent_plot <- cp %>%  filter(agency_name =='DHS') %>%
   scale_color_discrete() + theme_nycc(facet=TRUE) +
   ggtitle("DOP Race") + xlab("Year") + ylab("Percent") +  easy_plot_title_size(14)
 
-relative_plot <- cp %>%  filter(agency_name =='DHS') %>% 
+relative_plot <- cp %>%  filter(agency_name =='DOP') %>% 
   ggplot(aes(x = data_year, y = diff_middle)) +
   facet_wrap(~race_ethnicity, nrow=1) +
   geom_hline(yintercept=0, size = 0.25, color="grey") +
@@ -287,8 +287,8 @@ relative_plot <- cp %>%  filter(agency_name =='DHS') %>%
   scale_color_discrete() + theme_nycc(facet=TRUE) +
   ggtitle("DOP Race") + xlab("Year") + ylab("Relative Difference") +  easy_plot_title_size(14)
 
-final2 <- grid.arrange(percent_plot, relative_plot, nrow=2,  top = textGrob("DHS: Racial Diversity (2018-2020)",
+final2 <- grid.arrange(percent_plot, relative_plot, nrow=2,  top = textGrob("DOP: Racial Diversity (2018-2020)",
                                                                            gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
 
-ggsave(plot = final2, "../figures/DHS_diversity_by-race.png")
+ggsave(plot = final2, "../visuals/DOP_diversity_by-race.png")
 ```
