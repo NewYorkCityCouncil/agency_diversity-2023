@@ -1,0 +1,118 @@
+---
+title: "update"
+author: "Data Team"
+date: "3/14/2022"
+output: html_document
+---
+
+```{r setup, include=F, echo=F, warning=F}
+## Setup python environment ----
+#source("setup_python.R")
+```
+
+
+```{python, pckgs }
+import numpy as np
+import pandas as pd
+import plotly
+import plotly.express as px
+import plotly.graph_objects as go
+```
+
+## Including Plots
+
+```{python, setup}
+dat = pd.read_csv('../data/Agency_Diversity_18.csv')
+#from ACS 2018  1-year
+dat_city=[52,48,32,22,29,14,3]
+columns=dat.columns
+```
+
+
+```{python, check}
+print(columns)
+```
+
+```{r}
+py$dat
+py$dat_city
+```
+
+```{python, calculations }
+import numpy as np
+dat['d1']=np.abs(dat[columns[2]]-dat_city[0])+np.abs(dat[columns[3]]-dat_city[1])+np.abs(dat[columns[4]]-dat_city[2])+np.abs(dat[columns[5]]-dat_city[3])+np.abs(dat[columns[6]]-dat_city[4])+np.abs(dat[columns[7]]-dat_city[5])+np.abs(dat[columns[8]]-dat_city[6])
+dat['d2']=np.abs(dat[columns[2]]-dat_city[0])/dat_city[0]+np.abs(dat[columns[3]]-dat_city[1])/dat_city[1]+np.abs(dat[columns[4]]-dat_city[2])/dat_city[2]+np.abs(dat[columns[5]]-dat_city[3])/dat_city[3]+np.abs(dat[columns[6]]-dat_city[4])/dat_city[4]+np.abs(dat[columns[7]]-dat_city[5])/dat_city[5]+np.abs(dat[columns[8]]-dat_city[6])/dat_city[6]
+dat['d4']=np.abs(dat[columns[2]]-dat_city[0])/(dat[columns[2]]+dat_city[0])/2+np.abs(dat[columns[3]]-dat_city[1])/(dat[columns[3]]+dat_city[1])/2+np.abs(dat[columns[4]]-dat_city[2])/(dat[columns[4]]+dat_city[2])/2+np.abs(dat[columns[5]]-dat_city[3])/(dat[columns[5]]+dat_city[3])/2+np.abs(dat[columns[6]]-dat_city[4])/(dat[columns[6]]+dat_city[4])/2+np.abs(dat[columns[7]]-dat_city[5])/(dat[columns[7]]+dat_city[5])/2+np.abs(dat[columns[8]]-dat_city[6])/(dat[columns[8]]+dat_city[6])/2
+dat['d3']=np.sqrt((dat[columns[2]]-dat_city[0])**2+(dat[columns[3]]-dat_city[1])**2+(dat[columns[4]]-dat_city[2])**2+(dat[columns[5]]-dat_city[3])**2+(dat[columns[6]]-dat_city[4])**2+(dat[columns[7]]-dat_city[5])**2+(dat[columns[8]]-dat_city[6])**2)
+dat['d5']=np.abs(dat[columns[2]]-dat_city[0])/(dat[columns[2]]+dat_city[0])/2+np.abs(dat[columns[5]]-dat_city[3])/(dat[columns[5]]+dat_city[3])/2+np.abs(dat[columns[6]]-dat_city[4])/(dat[columns[6]]+dat_city[4])/2+np.abs(dat[columns[7]]-dat_city[5])/(dat[columns[7]]+dat_city[5])/2+np.abs(dat[columns[8]]-dat_city[6])/(dat[columns[8]]+dat_city[6])/2
+dat['d6']=np.sqrt((dat[columns[2]]-dat_city[0])**2+(dat[columns[5]]-dat_city[3])**2+(dat[columns[6]]-dat_city[4])**2+(dat[columns[7]]-dat_city[5])**2+(dat[columns[8]]-dat_city[6])**2)
+dat['d3_norm']=(dat['d3']-dat['d3'].min())/(dat['d3'].max()-dat['d3'].min())*100.0
+dat['d4_norm']=(dat['d4']-dat['d4'].min())/(dat['d4'].max()-dat['d4'].min())*100.0
+dat['d6_norm']=(dat['d6']-dat['d6'].min())/(dat['d6'].max()-dat['d6'].min())*100.0
+dat['d3_gender']=np.sqrt((dat[columns[2]]-dat_city[0])**2+(dat[columns[3]]-dat_city[1])**2)
+dat['d3_race']=np.sqrt((dat[columns[4]]-dat_city[2])**2+(dat[columns[5]]-dat_city[3])**2+(dat[columns[6]]-dat_city[4])**2+(dat[columns[7]]-dat_city[5])**2+(dat[columns[8]]-dat_city[6])**2)
+dat['d4_gender']=np.abs(dat[columns[2]]-dat_city[0])/(dat[columns[2]]+dat_city[0])/2+np.abs(dat[columns[3]]-dat_city[1])/(dat[columns[3]]+dat_city[1])/2
+dat['d4_race']=np.abs(dat[columns[4]]-dat_city[2])/(dat[columns[4]]+dat_city[2])/2+np.abs(dat[columns[5]]-dat_city[3])/(dat[columns[5]]+dat_city[3])/2+np.abs(dat[columns[6]]-dat_city[4])/(dat[columns[6]]+dat_city[4])/2+np.abs(dat[columns[7]]-dat_city[5])/(dat[columns[7]]+dat_city[5])/2+np.abs(dat[columns[8]]-dat_city[6])/(dat[columns[8]]+dat_city[6])/2
+dat['d3_gender_norm']=(dat['d3_gender']-dat['d3_gender'].min())/(dat['d3_gender'].max()-dat['d3_gender'].min())*100.0
+dat['d3_race_norm']=(dat['d3_race']-dat['d3_race'].min())/(dat['d3_race'].max()-dat['d3_race'].min())*100.0 
+```
+
+```{python viz setup, echo=F}
+dat['d3_norm_high']=dat['d3_norm'] > 80
+dat['d3_gender_norm_high']=dat['d3_gender_norm'] > 80
+dat['d3_race_norm_high']=dat['d3_race_norm'] > 80
+dat['d3_gender_race_norm_high']=(dat['d3_gender_norm'] > 80) | (dat['d3_race_norm'] > 80)
+```
+
+
+```{r add, output.var="dat1"}
+dat1 <- py$dat
+dat1$`Median Salary` <- as.numeric(c("60552", "87731", "78000", "45461", "55011", "70543", "79484", "64378", "55590", "46000", "73000", "117420", "70154", "73903", "44319", "112516", "56872", "69901", "59482", "86392", "82264", "91792", "73939", "77000", "64475", "76191", "64139", "61349", "70868", "65850", "62246", "46698", "58987", "61800", "61800", "61824", "70514", "82278", "107022", "59963", "46689", "65073", "57590", "46737", "75000", "68000", "77318", "78877", "69632", "65568", "75691", "75000", "70959", "72000", "61800", "62698", "65000", "60276", "78446", "64460", "69593", "64796", "65625", "78000", "76275", "80829", "85292", "85292", "78090", "61210", "67906", "76000"))
+py$dat1 <- dat1
+```
+
+```{python}
+dat = dat.assign(Median_Salary = ["60552", "87731", "78000", "45461", "55011", "70543", "79484", "64378", "55590", "46000", "73000", "117420", "70154", "73903", "44319", "112516", "56872", "69901", "59482", "86392", "82264", "91792", "73939", "77000", "64475", "76191", "64139", "61349", "70868", "65850", "62246", "46698", "58987", "61800", "61800", "61824", "70514", "82278", "107022", "59963", "46689", "65073", "57590", "46737", "75000", "68000", "77318", "78877", "69632", "65568", "75691", "75000", "70959", "72000", "61800", "62698", "65000", "60276", "78446", "64460", "69593", "64796", "65625", "78000", "76275", "80829", "85292", "85292", "78090", "61210", "67906", "76000"])
+print(dat)
+index = dat.index
+print(index)
+```
+
+```{python viz, echo=F}
+fig = px.scatter(dat, x="d3_gender_norm", y="d3_race_norm", hover_name='Agency', color='d3_gender_race_norm_high', size=dat[columns[4]], color_discrete_sequence=["#2F56A6", "#B63F26"], hover_data = {
+                               'd3_gender_race_norm_high':False,
+                               'd3_gender_norm':':.1f',
+                               'd3_race_norm':':.1f',
+                               'Median_Salary':':$.0f',
+                               '# Employees':True,
+                               '%Female':True,
+                               '%Black':True,
+                               '%Hispanic':True,
+                               '%Asian':True,
+                               '%SOR':True},
+  labels={'d3_gender_norm':'Gender','d3_race_norm':'Race/Ethnicity',
+  'Median_Salary':'Median Salary',
+  'd3_gender_race_norm_high':''})
+fig.update_traces(textposition='top center')
+fig.add_hline(y=50,line_dash="dash",line_color='grey')
+fig.add_vline(x=50,line_dash="dash",line_color='grey')
+fig.add_annotation(xref="x domain",yref="y domain",x=0.005,y=-0.0,text="Closest",showarrow=False)
+fig.add_annotation(xref="x domain",yref="y domain",x=0.98,y=-0.0,text="Farthest",showarrow=False)
+fig.add_annotation(xref="x domain",yref="y domain",x=0.005,y=0.98,text="Farthest",showarrow=False)
+fig.add_annotation(xref="x domain",yref="y domain",
+x=0.99,y=0.9,text="NYC Population: <br> Female = 52%<br>  Black = 22%<br>  Hispanic = 29%<br> Asian = 14%<br>  SOR = 3%",showarrow=False)
+#fig.update_layout(showlegend=False)
+newnames = set()
+fig.for_each_trace(
+    lambda trace:
+        trace.update(showlegend=False)
+        if (dat[dat['d3_gender_race_norm_high'] == False].bool) else newnames.add(trace.name))
+# newnames = {'True':'Agencies Farthest Away <br><sup> (Score >= 80)</sup>'}
+# fig.for_each_trace(lambda t: t.update(name = newnames[t.name]))
+fig.update_layout({"title": 
+        {"text": " Agency Demographics Compared to NYC's Population<br> <sup>An agency with a lower score (0) is closer to, while a higher score (100) is farther away from NYC's Gender & Racial Breakdown</sup>",
+        "font": {"size": 20}}},
+      legend=dict(yanchor="top",xanchor="left", x=0.942))
+      
+fig.write_html("updated_agency_diversity_distance.html")
+```

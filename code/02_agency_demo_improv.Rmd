@@ -5,15 +5,7 @@ date: "2023-03-06"
 ---
 
 ```{r setup, include=FALSE}
-# load libraries ----
-library(RSocrata)
-library(skimr)
-library(dplyr)
-library(tidyr)
-library(hrbrthemes)
-library(plotly)
-library(ggplot2)
-
+# ***FIRST***: load libraries from `00_load_dependencies.R`
 # read dataset ----
 r <- read.socrata("https://data.cityofnewyork.us/resource/423i-ukqr.json?$limit=9999999999", stringsAsFactors = F)
 ```
@@ -117,17 +109,11 @@ r2 <- r1 %>% filter(employee_status=="Full-Time")
 ```
 
 ```{r}
-city_po
-```
-
-```{r}
-r2 %>% group_by(data_year)
 r2$gender2 <- recode(r2$gender, 
                     "Non-binary" = "Other",
                     "Other Gender" = "Other",
-                    "Unknown" = "Other")
+                    "Unknown" = "Other") # because each of these groups are really small on their own..
 ```
-
 
 ```{r}
 # eda demographic changes -----------
@@ -214,10 +200,6 @@ agency_gender <- r2 %>% group_by(data_year, agency_name, gender2) %>%
          diff_top = number_of_employees_top - lag(number_of_employees_top),
          diff_bottom =  number_of_employees_bottom - lag(number_of_employees_bottom))
 ```
-```{r}
-city_pop
-```
-
 
 ```{r}
 # ----- IGNORE: ORIGINAL CODE -----
@@ -248,105 +230,65 @@ poor_agency_gender <- agency_gender %>%
   filter(agency_name %in% c('DSNY', 'FDNY', 'NYPD', 'DOITT', 'DEP'))
 ```
 
-# ***TO DO: UPDATE BELOW***
+```{r, fig.height = 4, fig.width=12}
+# plot gender diversity ----
 
-```{r}
-# eda plots ------------
-
-#cp <- city_pop %>% 
-#cp <- city_race %>% 
 cp <- poor_agency_gender %>%
   select(data_year, pct.chg_middle, diff_middle) %>% 
   mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100,
          pct.chg_middle = case_when(data_year==2018 ~ 0, TRUE ~ pct.chg_middle),
          diff_middle = case_when(data_year==2018 ~ 0, TRUE ~ diff_middle))
-```
 
-```{r}
-poor_agency_gender[poor_agency_gender$agency_name == 'DEP',]
-1279/(1279+4208+12)
-1310/(1310+4226+3+2+17)
-1291/(1291+4054+3+3+19)
-```
-
-
-```{r}
-cp
-cp[cp$gender == 'Female',]
-cp$gender2 <- recode(cp$gender, 
-                    "Non-binary" = "Other",
-                    "Other Gender" = "Other",
-                    "Unknown" = "Other")
-```
-pct change is year to year not compared to 2018 now 
-
-```{r}
-city_gender
-```
-```{r}
-cp
-```
-
-
-
-```{r}
-p1 <- cp %>%  filter(agency_name =='DEP') %>% 
+percent_plot <- cp %>%  filter(agency_name =='DSNY',gender2!="Other") %>% 
   ggplot(aes(x = data_year, y = pct.chg_middle)) +
-  geom_line(color = "#666666") + 
   facet_wrap(~gender2, nrow=1) +
-  #geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
-  #geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
+  geom_hline(yintercept=0, size = 0.5, color="grey") +
   geom_point(aes(color=data_year), show.legend = FALSE) +
-  hrbrthemes::theme_ipsum() +
-  ggtitle("DEP Gender") + xlab("Year") + ylab("Percent Change")
+  scale_color_discrete() + theme_nycc(facet=TRUE) +
+  ggtitle("Percent Change") + xlab("Year") + ylab("Percent") +  easy_plot_title_size(14)
 
-p2 <- cp %>%  filter(agency_name =='DEP') %>% 
+relative_plot <- cp %>%  filter(agency_name =='DSNY',gender2!="Other") %>% 
   ggplot(aes(x = data_year, y = diff_middle)) +
-  geom_line(color = "#666666") + 
   facet_wrap(~gender2, nrow=1) +
-  #geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
-  #geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
+  geom_hline(yintercept=0, size = 0.5, color="grey") +
   geom_point(aes(color=data_year)) +
-  hrbrthemes::theme_ipsum() +
-  ggtitle("DEP Gender") + xlab("Year") + ylab("Relative Difference")
+  scale_color_discrete(name = "Year") + theme_nycc(facet=TRUE) +
+  ggtitle("Relative Difference") + xlab("Year") + ylab("Number") +  easy_plot_title_size(14)
 
-grid.arrange(p1, p2, ncol=2)
+final <- grid.arrange(percent_plot, relative_plot, ncol=2,  top = textGrob("DSNY: Gender Diversity (2018-2020)",
+                                                                           gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
+ggsave(plot = final, "../figures/DSNY_diversity_by-gender.png")
 ```
 
-
-```{r}
-cp$data_year <- sub("2018", "baseline", cp$data_year )
-
-cp %>%  filter(agency_name =='DEP') %>% 
-  ggplot(aes(x = pct.chg_middle, y = diff_middle)) +
-  geom_line(color = "#666666") + 
-  facet_wrap(~gender, nrow=1) +
-  geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
-  geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
-  geom_point(aes(color=data_year)) +
-  hrbrthemes::theme_ipsum() +
-  ggtitle("DEP Gender") + xlab("Percent Change") + ylab("Relative Difference")
-
-#ggsave("../visuals/DEP_gender_raw_vs_pct.png")
-#ggsave("../visuals/citywide_race_raw_vs_pct.png")
-
+```{r, fig.height = 4, fig.width=11.2}
+# plot racial diversity ----
 
 cp <- poor_agency_race %>%
   select(data_year, pct.chg_middle, diff_middle) %>% 
   mutate(pct.chg_middle  = as.numeric(pct.chg_middle) * 100,
          pct.chg_middle = case_when(data_year==2018 ~ 0, TRUE ~ pct.chg_middle),
          diff_middle = case_when(data_year==2018 ~ 0, TRUE ~ diff_middle))
+cp$race_ethnicity <- recode(cp$race_ethnicity, 
+                    "Ethnicity Unknown or Choose Not to Disclose" = "Ethnicity UCND") # to fit better in plot
 
-cp %>%  filter(agency_name =='DOP') %>% 
-  ggplot(aes(x = pct.chg_middle, y = diff_middle)) +
-  geom_line(color = "#666666") + 
+percent_plot <- cp %>%  filter(agency_name =='DHS') %>% 
+  ggplot(aes(x = data_year, y = pct.chg_middle)) +
   facet_wrap(~race_ethnicity, nrow=1) +
-  geom_vline(xintercept = 0, color = "#CACACA", size=0.6) + 
-  geom_hline(yintercept = 0,color = "#CACACA", size=0.6) +
-  geom_point(aes(color=data_year)) +
-  hrbrthemes::theme_ipsum() +
-  ggtitle("DOP Race") + xlab("Percent Change") + ylab("Relative Difference")
+  geom_hline(yintercept=0, size = 0.25, color="grey") +
+  geom_point(aes(color=data_year), show.legend = FALSE) +
+  scale_color_discrete() + theme_nycc(facet=TRUE) +
+  ggtitle("DOP Race") + xlab("Year") + ylab("Percent") +  easy_plot_title_size(14)
 
+relative_plot <- cp %>%  filter(agency_name =='DHS') %>% 
+  ggplot(aes(x = data_year, y = diff_middle)) +
+  facet_wrap(~race_ethnicity, nrow=1) +
+  geom_hline(yintercept=0, size = 0.25, color="grey") +
+  geom_point(aes(color=data_year), show.legend = FALSE) +
+  scale_color_discrete() + theme_nycc(facet=TRUE) +
+  ggtitle("DOP Race") + xlab("Year") + ylab("Relative Difference") +  easy_plot_title_size(14)
 
- ggsave("../visuals/DOP_race_raw_vs_pct.png")
+final2 <- grid.arrange(percent_plot, relative_plot, nrow=2,  top = textGrob("DHS: Racial Diversity (2018-2020)",
+                                                                           gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
+
+ggsave(plot = final2, "../figures/DHS_diversity_by-race.png")
 ```
