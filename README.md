@@ -1,5 +1,5 @@
 # agency_diversity-2023
-pay equity 2023 updates
+updates to the original agency-diversity code (https://github.com/NewYorkCityCouncil/agency_diversity)
 
 Data is from DCAS workforce profile reports:
 
