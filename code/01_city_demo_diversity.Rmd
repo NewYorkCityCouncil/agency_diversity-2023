@@ -120,9 +120,9 @@ sum(as.integer(df_20_1$PWGTP)) # looking good
 ```{r}
 # individual level demos ----- 
 # whereas df_[year]_1 is aggregated by total of x demographic
-write.csv(df_18_2, '../data/city_demo_by-pums_2018.csv', row.names = F)
-write.csv(df_19_2, '../data/city_demo_by-pums_2019.csv', row.names = F)
-write.csv(df_20_2, '../data/city_demo_by-pums_2020.csv', row.names = F)
+write.csv(df_18_2, '../data/output/city_demo_by-pums_2018.csv', row.names = F)
+write.csv(df_19_2, '../data/output/city_demo_by-pums_2019.csv', row.names = F)
+write.csv(df_20_2, '../data/output/city_demo_by-pums_2020.csv', row.names = F)
 ```
 
 ```{r}
@@ -210,9 +210,9 @@ city_sor_20 <- get_var(race_20, race_20$race_ethnicity, "NH Other")
 ```{r}
 # ***TO DO: GET NEW DATA***
 # read in 2018-2020 agency diversity csv (from DCAS worker profile)
-wp_18 <- read.csv("../data/agency_diversity_2018.csv") %>% janitor::clean_names()
-wp_19 <- read.csv("../data/agency_diversity_2019.csv") %>% janitor::clean_names()
-wp_20 <- read.csv("../data/agency_diversity_2020.csv") %>% janitor::clean_names()
+wp_18 <- read.csv("../data/input/agency_diversity_2018.csv") %>% janitor::clean_names()
+wp_19 <- read.csv("../data/input/agency_diversity_2019.csv") %>% janitor::clean_names()
+wp_20 <- read.csv("../data/input/agency_diversity_2020.csv") %>% janitor::clean_names()
 ```
 
 ```{r}
@@ -299,7 +299,7 @@ run_calc_2 <- function(wp, city_female, city_male, city_white, city_black, city_
 
 ```{r}
 # for github chart
-write.csv(run_calc_2(wp_18, city_female_18, city_male_18, city_white_18, city_black_18, city_hispanic_18, city_asian_18, city_sor_18), '../data/agency_diversity_calculations_2018.csv', row.names = F)
-write.csv(run_calc_2(wp_19, city_female_19, city_male_19, city_white_19, city_black_19, city_hispanic_19, city_asian_19, city_sor_19), '../data/agency_diversity_calculations_2019.csv', row.names = F)
-write.csv(run_calc_2(wp_20, city_female_20, city_male_20, city_white_20, city_black_20, city_hispanic_20, city_asian_20, city_sor_20), '../data/agency_diversity_calculations_2020.csv', row.names = F)
+write.csv(run_calc_2(wp_18, city_female_18, city_male_18, city_white_18, city_black_18, city_hispanic_18, city_asian_18, city_sor_18), '../data/output/agency_diversity_calculations_2018.csv', row.names = F)
+write.csv(run_calc_2(wp_19, city_female_19, city_male_19, city_white_19, city_black_19, city_hispanic_19, city_asian_19, city_sor_19), '../data/output/agency_diversity_calculations_2019.csv', row.names = F)
+write.csv(run_calc_2(wp_20, city_female_20, city_male_20, city_white_20, city_black_20, city_hispanic_20, city_asian_20, city_sor_20), '../data/output/agency_diversity_calculations_2020.csv', row.names = F)
 ```
