@@ -19,7 +19,9 @@ list.of.packages <- c("jsonlite",
                       "ggplot2",
                       "gridExtra",
                       "ggeasy",
-                      "councildown")
+                      "councildown",
+                      "grid",
+                      "ggrepel")
 
 # checks if packages has been previously installed
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]

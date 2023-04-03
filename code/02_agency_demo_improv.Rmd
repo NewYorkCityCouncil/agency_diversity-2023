@@ -243,7 +243,7 @@ percent_plot <- cp %>%  filter(agency_name =='DSNY',gender2!="Other") %>%
   ggplot(aes(x = data_year, y = pct.chg_middle)) +
   facet_wrap(~gender2, nrow=1) +
   geom_hline(yintercept=0, size = 0.5, color="grey") +
-  geom_point(aes(color=data_year), show.legend = FALSE) +
+  geom_point(aes(color=data_year), show.legend = FALSE) + geom_label_repel(data = ~ subset(., data_year %in% c(2019,2020)), aes(label = round(pct.chg_middle, digits=2))) + # pct.chg_middle rounded to 3 decimal places
   scale_color_discrete() + theme_nycc(facet=TRUE) +
   ggtitle("Percent Change") + xlab("Year") + ylab("Percent") +  easy_plot_title_size(14)
 
@@ -251,13 +251,13 @@ relative_plot <- cp %>%  filter(agency_name =='DSNY',gender2!="Other") %>%
   ggplot(aes(x = data_year, y = diff_middle)) +
   facet_wrap(~gender2, nrow=1) +
   geom_hline(yintercept=0, size = 0.5, color="grey") +
-  geom_point(aes(color=data_year)) +
+  geom_point(aes(color=data_year)) + geom_label_repel(data = ~ subset(., data_year %in% c(2019,2020)), aes(label = round(diff_middle, digits=0))) + # diff_middle rounded to 0 to make more sense
   scale_color_discrete(name = "Year") + theme_nycc(facet=TRUE) +
   ggtitle("Relative Difference") + xlab("Year") + ylab("Number") +  easy_plot_title_size(14)
 
-final <- grid.arrange(percent_plot, relative_plot, ncol=2,  top = textGrob("DSNY: Gender Diversity (2018-2020)",
-                                                                           gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
-ggsave(plot = final, "../figures/DSNY_diversity_by-gender.png")
+final <- grid.arrange(percent_plot, relative_plot, ncol=2,  top = textGrob("DSNY: Gender Diversity (2018-2020)",gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
+
+ggsave(plot = final, "../visuals/DSNY_diversity_by-gender.png")
 ```
 
 ```{r, fig.height = 4, fig.width=11.2}
@@ -275,7 +275,7 @@ percent_plot <- cp %>%  filter(agency_name =='DOP') %>%
   ggplot(aes(x = data_year, y = pct.chg_middle)) +
   facet_wrap(~race_ethnicity, nrow=1) +
   geom_hline(yintercept=0, size = 0.25, color="grey") +
-  geom_point(aes(color=data_year), show.legend = FALSE) +
+  geom_point(aes(color=data_year), show.legend = FALSE) + geom_label_repel(data = ~ subset(., data_year %in% c(2019,2020)), aes(label = round(pct.chg_middle, digits=2))) + # pct.chg_middle rounded to 3 decimal places
   scale_color_discrete() + theme_nycc(facet=TRUE) +
   ggtitle("DOP Race") + xlab("Year") + ylab("Percent") +  easy_plot_title_size(14)
 
@@ -283,12 +283,12 @@ relative_plot <- cp %>%  filter(agency_name =='DOP') %>%
   ggplot(aes(x = data_year, y = diff_middle)) +
   facet_wrap(~race_ethnicity, nrow=1) +
   geom_hline(yintercept=0, size = 0.25, color="grey") +
-  geom_point(aes(color=data_year), show.legend = FALSE) +
+  geom_point(aes(color=data_year), show.legend = FALSE) + geom_label_repel(data = ~ subset(., data_year %in% c(2019,2020)),aes(label = round(diff_middle, 0))) + # diff_middle rounded to 0 to make more sense
   scale_color_discrete() + theme_nycc(facet=TRUE) +
   ggtitle("DOP Race") + xlab("Year") + ylab("Relative Difference") +  easy_plot_title_size(14)
 
-final2 <- grid.arrange(percent_plot, relative_plot, nrow=2,  top = textGrob("DOP: Racial Diversity (2018-2020)",
-                                                                           gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
+final2 <- grid.arrange(percent_plot, relative_plot, nrow=2,  top = textGrob("DOP: Racial Diversity (2018-2020)", gp=gpar(fontsize=19, fontfamily="Georgia", font=2)))
 
 ggsave(plot = final2, "../visuals/DOP_diversity_by-race.png")
 ```
+
