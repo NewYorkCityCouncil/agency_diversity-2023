@@ -251,7 +251,7 @@ relative_plot <- cp %>%  filter(agency_name =='DSNY',gender2!="Other") %>%
   ggplot(aes(x = data_year, y = diff_middle)) +
   facet_wrap(~gender2, nrow=1) +
   geom_hline(yintercept=0, size = 0.5, color="grey") +
-  geom_point(aes(color=data_year)) + geom_label_repel(data = ~ subset(., data_year %in% c(2019,2020)), aes(label = round(diff_middle, digits=0))) + # diff_middle rounded to 0 to make more sense
+  geom_point(aes(color=data_year)) + geom_label_repel(data = ~ subset(., data_year %in% c(2019,2020,2021)), aes(label = round(diff_middle, digits=0))) + # diff_middle rounded to 0 to make more sense
   scale_color_discrete(name = "Year") + theme_nycc(facet=TRUE) +
   ggtitle("Relative Difference") + xlab("Year") + ylab("Number") +  easy_plot_title_size(14)
 
