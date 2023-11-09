@@ -63,7 +63,7 @@ recode_df <- function(df) {
                                      "9" = "Other"),
                       SEX = recode(SEX, "1" = "Male",
                                         "2" = "Female"),
-                      HISP = case_when(HISP != "1" ~ "Hispanic or Latino", 
+                      HISP = case_when(HISP != "01" ~ "Hispanic or Latino", # '01' update (2021)
                                        TRUE ~ "Non-Hispanic"),
                       race_ethnicity = case_when(HISP == "Non-Hispanic" ~ race_ethnicity,
                                                  TRUE ~ "Hispanic or Latino"),
